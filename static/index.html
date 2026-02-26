@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse Scanner - Система учёта товаров</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>📦 Warehouse Management System</h1>
+            <p class="subtitle">Сканирование товаров и локаций</p>
+        </header>
+
+        <!-- Auth Section -->
+        <section class="auth-section" id="authSection">
+            <h2>Авторизация</h2>
+            <div class="form-group">
+                <input type="text" id="username" placeholder="Логин: operator1" value="operator1" class="form-control">
+            </div>
+            <div class="form-group">
+                <input type="password" id="password" placeholder="Пароль: password123" value="password123" class="form-control">
+            </div>
+            <button class="btn btn-primary" onclick="login()">🔐 Войти</button>
+            <div id="authMessage" class="message"></div>
+        </section>
+
+        <!-- Scanner Section (hidden until logged in) -->
+        <section class="scanner-section" id="scannerSection" style="display: none;">
+            <!-- User Info -->
+            <div class="user-info">
+                <span>👤 Оператор: <strong id="currentUser"></strong></span>
+                <button class="btn btn-small" onclick="logout()">Выход</button>
+            </div>
+
+            <!-- Scanner Mode Selector -->
+            <div class="mode-selector">
+                <button class="btn btn-mode" id="modeItem" onclick="switchMode('item')">📦 Сканировать товар</button>
+                <button class="btn btn-mode" id="modeLocation" onclick="switchMode('location')">📍 Сканировать локацию</button>
+                <button class="btn btn-mode" id="modeScan" onclick="switchMode('scan')" style="display: none;">✅ Рёбра</button>
+            </div>
+
+            <!-- Camera Container -->
+            <div class="camera-container">
+                <video id="cameraFeed" class="camera-feed" playsinline autoplay muted></video>
+                <canvas id="scanner" class="scanner-canvas" style="display: none;"></canvas>
+                <div class="scanner-overlay">
+                    <div class="scanner-frame"></div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button class="btn btn-scan" id="startButton" onclick="startCamera()">▶️ Открыть камеру</button>
+                <button class="btn btn-stop" id="stopButton" onclick="stopCamera()" style="display: none;">⏹️ Закрыть камеру</button>
+            </div>
+
+            <!-- Scanned Data -->
+            <div class="scanned-data">
+                <div class="data-item">
+                    <label>Сканированный товар:</label>
+                    <div class="data-value" id="scannedItem">—</div>
+                </div>
+                <div class="data-item">
+                    <label>Сканированная локация:</label>
+                    <div class="data-value" id="scannedLocation">—</div>
+                </div>
+                <div class="data-item">
+                    <label>Текущий статус:</label>
+                    <div class="data-value" id="currentStatus">Ожидание сканирования...</div>
+                </div>
+            </div>
+
+            <!-- Item Info -->
+            <div id="itemInfoContainer" class="info-container" style="display: none;">
+                <h3>📦 Информация о товаре</h3>
+                <div class="info-grid">
+                    <div><strong>Наименование:</strong> <span id="itemName"></span></div>
+                    <div><strong>SKU:</strong> <span id="itemSku"></span></div>
+                    <div><strong>Количество:</strong> <span id="itemQuantity"></span></div>
+                    <div><strong>Текущая локация:</strong> <span id="itemLocation"></span></div>
+                </div>
+            </div>
+
+            <!-- Confirm Action -->
+            <div id="confirmContainer" class="confirm-container" style="display: none;">
+                <h3>✅ Подтверждение перемещения</h3>
+                <div class="confirm-details">
+                    <div><strong>Товар:</strong> <span id="confirmItem"></span></div>
+                    <div><strong>Из локации:</strong> <span id="confirmFromLocation"></span></div>
+                    <div><strong>В локацию:</strong> <span id="confirmToLocation"></span></div>
+                </div>
+                <div class="form-group">
+                    <textarea id="notes" placeholder="Примечания (опционально)" class="form-control"></textarea>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-success" onclick="confirmMove()">✓ Подтвердить</button>
+                    <button class="btn btn-cancel" onclick="resetScan()">✗ Отменить</button>
+                </div>
+            </div>
+
+            <!-- Recent Moves -->
+            <div id="recentMovesContainer" class="recent-moves" style="display: none;">
+                <h3>📊 История перемещений текущей сессии</h3>
+                <div id="movesList" class="moves-list"></div>
+            </div>
+
+            <!-- Messages -->
+            <div id="message" class="message"></div>
+        </section>
+    </div>
+
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script src="/js/scanner.js"></script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+Тестовые учётные данные:
+
+Username: operator1
+Password: password123
