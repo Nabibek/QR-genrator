@@ -47,6 +47,8 @@ func InitDB() error {
 		&models.Item{},
 		&models.User{},
 		&models.ItemMovement{},
+		&models.WorkOrder{},
+		&models.WorkOrderItem{},
 	)
 
 	if err != nil {
