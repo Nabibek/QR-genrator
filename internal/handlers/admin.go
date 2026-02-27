@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	qrcode "github.com/skip2/go-qrcode"
+	"gorm.io/gorm"
 )
 
 // ============================================================================
@@ -305,4 +306,42 @@ func AdminGetCategories(c *gin.Context) {
 	var categories []string
 	db.Model(&models.Item{}).Distinct("category").Where("category != ''").Pluck("category", &categories)
 	c.JSON(http.StatusOK, gin.H{"success": true, "categories": categories})
+}
+
+// handlers/mechanic.go — добавить эти два метода
+
+// UpdateOrderStatus PUT /api/mechanic/order/:id/status
+func UpdateOrderStatus(c *gin.Context) {
+	id := c.Param("id")
+	var req struct {
+		Status string `json:"status"`
+	}
+	c.ShouldBindJSON(&req)
+	db := database.GetDB()
+	db.Model(&models.WorkOrder{}).Where("id = ?", id).Update("status", req.Status)
+	c.JSON(200, gin.H{"success": true})
+}
+
+// GenerateOrderQR POST /api/mechanic/order/:id/qr
+func GenerateOrderQR(c *gin.Context) {
+	id := c.Param("id")
+	qrPath := fmt.Sprintf("qrcodes/order_%s.png", id)
+	qrcode.WriteFile("WO:"+id, qrcode.High, 256, qrPath)
+	c.JSON(200, gin.H{"success": true, "qr_url": "/qrcodes/order_" + id + ".png"})
+}
+
+// IssueOrder POST /api/mechanic/order/:id/issue — списывает остатки
+func IssueOrder(c *gin.Context) {
+	id := c.Param("id")
+	db := database.GetDB()
+	var order models.WorkOrder
+	db.Preload("Items").First(&order, "id = ?", id)
+	for _, item := range order.Items {
+		if item.ItemID != "" {
+			db.Model(&models.Item{}).Where("id = ?", item.ItemID).
+				UpdateColumn("quantity", gorm.Expr("quantity - ?", item.Quantity))
+		}
+	}
+	db.Model(&models.WorkOrder{}).Where("id = ?", id).Update("status", "issued")
+	c.JSON(200, gin.H{"success": true})
 }

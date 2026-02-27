@@ -44,6 +44,9 @@ func SetupRoutes(router *gin.Engine) {
 		mechanic.POST("/order", handlers.CreateWorkOrder)
 		mechanic.GET("/orders", handlers.GetMyOrders)
 		mechanic.GET("/order/:id", handlers.GetWorkOrder)
+		mechanic.PUT("/order/:id/status", handlers.UpdateOrderStatus)
+		mechanic.POST("/order/:id/qr", handlers.GenerateOrderQR)
+		mechanic.POST("/order/:id/issue", handlers.IssueOrder)
 	}
 
 	// Статика

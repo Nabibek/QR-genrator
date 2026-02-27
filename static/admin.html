@@ -3,886 +3,686 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warehouse Admin — Управление складом</title>
+    <title>Warehouse — Кладовщик / Админ</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #f0f2f5;
-            color: #1a1a2e;
-            min-height: 100vh;
-        }
-
-        /* ── AUTH ── */
-        .auth-overlay {
-            position: fixed; inset: 0;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 1000;
-        }
-        .auth-card {
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
-            width: 360px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+        .auth-overlay { position: fixed; inset: 0; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .auth-card { background: white; border-radius: 16px; padding: 40px; width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
         .auth-card h2 { font-size: 22px; margin-bottom: 8px; }
         .auth-card p  { color: #666; font-size: 14px; margin-bottom: 24px; }
-
-        /* ── LAYOUT ── */
-        .sidebar {
-            position: fixed; left: 0; top: 0; bottom: 0; width: 220px;
-            background: #1a1a2e;
-            padding: 24px 0;
-            display: flex; flex-direction: column;
-        }
-        .sidebar-logo {
-            padding: 0 20px 24px;
-            font-size: 16px; font-weight: 700; color: white;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
+        .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 230px; background: #1a1a2e; padding: 24px 0; display: flex; flex-direction: column; z-index: 100; }
+        .sidebar-logo { padding: 0 20px 20px; font-size: 16px; font-weight: 700; color: white; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .sidebar-logo span { color: #e94560; }
-        .nav-item {
-            padding: 12px 20px;
-            color: rgba(255,255,255,0.6);
-            cursor: pointer;
-            display: flex; align-items: center; gap: 10px;
-            font-size: 14px;
-            transition: all 0.2s;
-            border-left: 3px solid transparent;
-        }
+        .sidebar-section { padding: 14px 20px 6px; font-size: 10px; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .nav-item { padding: 11px 20px; color: rgba(255,255,255,0.6); cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; transition: all 0.2s; border-left: 3px solid transparent; }
         .nav-item:hover { color: white; background: rgba(255,255,255,0.05); }
         .nav-item.active { color: white; background: rgba(233,69,96,0.15); border-left-color: #e94560; }
-        .nav-item .icon { font-size: 18px; width: 24px; text-align: center; }
-        .sidebar-user {
-            margin-top: auto;
-            padding: 16px 20px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.5);
-            font-size: 13px;
-        }
-
-        .main { margin-left: 220px; padding: 32px; }
-
+        .nav-item .icon { font-size: 17px; width: 22px; text-align: center; }
+        .nav-badge { margin-left: auto; background: #e94560; color: white; border-radius: 10px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
+        .sidebar-user { margin-top: auto; padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); font-size: 13px; }
+        .main { margin-left: 230px; padding: 28px 32px; }
         .page { display: none; }
         .page.active { display: block; }
-
-        /* ── CARDS ── */
-        .page-header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 24px;
-        }
+        .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
         .page-title { font-size: 24px; font-weight: 700; }
         .page-subtitle { color: #666; font-size: 14px; margin-top: 4px; }
-
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            margin-bottom: 24px;
-        }
-        .card-title {
-            font-size: 16px; font-weight: 600;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        /* ── FORM ── */
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
+        .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px; }
+        .card-title { font-size: 15px; font-weight: 600; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 8px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 24px; }
+        .stat-card { background: white; border-radius: 12px; padding: 18px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .stat-label { font-size: 12px; color: #888; margin-bottom: 6px; }
+        .stat-value { font-size: 26px; font-weight: 700; }
+        .stat-sub   { font-size: 11px; color: #aaa; margin-top: 3px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .form-group { display: flex; flex-direction: column; gap: 6px; }
         .form-group.full { grid-column: 1 / -1; }
         .form-group label { font-size: 13px; font-weight: 500; color: #555; }
-        .form-control {
-            padding: 10px 14px;
-            border: 1.5px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.2s;
-            outline: none;
-            width: 100%;
-        }
+        .form-control { padding: 10px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: border-color 0.2s; outline: none; width: 100%; }
         .form-control:focus { border-color: #e94560; }
         select.form-control { background: white; cursor: pointer; }
         textarea.form-control { resize: vertical; min-height: 80px; }
-
-        .photo-upload {
-            border: 2px dashed #e0e0e0;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-        }
+        .photo-upload { border: 2px dashed #e0e0e0; border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; }
         .photo-upload:hover { border-color: #e94560; background: #fff5f7; }
         .photo-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
         .photo-upload .upload-icon { font-size: 28px; margin-bottom: 8px; }
         .photo-upload p { font-size: 13px; color: #888; }
         .photo-preview { max-width: 100%; max-height: 120px; border-radius: 6px; margin-top: 10px; display: none; }
-
-        /* ── BUTTONS ── */
-        .btn {
-            padding: 10px 20px;
-            border: none; border-radius: 8px;
-            font-size: 14px; font-weight: 500;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .btn-primary { background: #e94560; color: white; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary   { background: #e94560; color: white; }
         .btn-primary:hover { background: #c73652; }
         .btn-secondary { background: #f0f2f5; color: #333; }
         .btn-secondary:hover { background: #e0e2e5; }
-        .btn-success { background: #10b981; color: white; }
+        .btn-success   { background: #10b981; color: white; }
         .btn-success:hover { background: #059669; }
+        .btn-warning   { background: #f59e0b; color: white; }
+        .btn-warning:hover { background: #d97706; }
+        .btn-blue      { background: #3b82f6; color: white; }
+        .btn-blue:hover { background: #2563eb; }
         .btn-sm { padding: 6px 12px; font-size: 12px; }
-        .btn-icon { padding: 6px 10px; font-size: 16px; }
-
-        .form-actions {
-            display: flex; gap: 12px; justify-content: flex-end;
-            margin-top: 20px; padding-top: 20px;
-            border-top: 1px solid #f0f0f0;
-        }
-
-        /* ── TABLE ── */
-        .table-controls {
-            display: flex; gap: 12px; margin-bottom: 16px; align-items: center;
-        }
-        .search-input {
-            padding: 9px 14px;
-            border: 1.5px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-            width: 260px;
-            transition: border-color 0.2s;
-        }
+        .form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; padding-top: 20px; border-top: 1px solid #f0f0f0; }
+        .table-controls { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+        .search-input { padding: 9px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; outline: none; width: 250px; transition: border-color 0.2s; }
         .search-input:focus { border-color: #e94560; }
-
         table { width: 100%; border-collapse: collapse; }
-        th {
-            text-align: left; padding: 10px 14px;
-            font-size: 12px; font-weight: 600;
-            color: #888; text-transform: uppercase; letter-spacing: 0.5px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-        td {
-            padding: 12px 14px;
-            font-size: 14px;
-            border-bottom: 1px solid #f7f7f7;
-            vertical-align: middle;
-        }
+        th { text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #f0f0f0; }
+        td { padding: 12px 14px; font-size: 14px; border-bottom: 1px solid #f7f7f7; vertical-align: middle; }
         tr:hover td { background: #fafafa; }
-        .badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 12px; font-weight: 500;
-        }
-        .badge-blue  { background: #eff6ff; color: #3b82f6; }
-        .badge-green { background: #f0fdf4; color: #16a34a; }
-        .badge-gray  { background: #f3f4f6; color: #6b7280; }
-
+        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+        .badge-blue   { background: #eff6ff; color: #3b82f6; }
+        .badge-green  { background: #f0fdf4; color: #16a34a; }
+        .badge-gray   { background: #f3f4f6; color: #6b7280; }
+        .badge-red    { background: #fef2f2; color: #dc2626; }
+        .badge-orange { background: #fff7ed; color: #ea580c; }
+        .badge-purple { background: #f5f3ff; color: #7c3aed; }
+        .badge-yellow { background: #fefce8; color: #ca8a04; }
         .qty { font-weight: 600; }
         .qty.low { color: #ef4444; }
-
-        /* ── STATS ── */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-        .stat-label { font-size: 13px; color: #888; margin-bottom: 8px; }
-        .stat-value { font-size: 28px; font-weight: 700; }
-        .stat-sub   { font-size: 12px; color: #aaa; margin-top: 4px; }
-
-        /* ── SUCCESS MODAL ── */
-        .modal-overlay {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.5);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 500; display: none;
-        }
-        .modal-overlay.show { display: flex; }
-        .modal {
-            background: white;
-            border-radius: 16px;
-            padding: 32px;
-            width: 380px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-        }
-        .modal-icon { font-size: 48px; margin-bottom: 16px; }
-        .modal h3 { font-size: 20px; margin-bottom: 8px; }
-        .modal p { color: #666; font-size: 14px; margin-bottom: 20px; }
-        .qr-preview { width: 160px; height: 160px; border-radius: 8px; margin: 0 auto 20px; display: block; }
-
-        /* ── ALERT ── */
-        .alert {
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            margin-bottom: 16px;
-            display: none;
-        }
+        .alert { padding: 12px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; display: none; }
         .alert.show { display: block; }
         .alert-error   { background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
         .alert-success { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
-
-        .empty-state {
-            text-align: center; padding: 48px 20px; color: #aaa;
-        }
+        .alert-info    { background: #eff6ff; color: #3b82f6; border: 1px solid #dbeafe; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 500; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: white; border-radius: 16px; padding: 32px; width: 420px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+        .modal-icon { font-size: 48px; margin-bottom: 16px; }
+        .modal h3 { font-size: 20px; margin-bottom: 8px; }
+        .modal p { color: #666; font-size: 14px; margin-bottom: 20px; }
+        .qr-preview { width: 180px; height: 180px; border-radius: 8px; margin: 0 auto 20px; display: block; border: 1px solid #e0e0e0; }
+        .empty-state { text-align: center; padding: 48px 20px; color: #aaa; }
         .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+        .orders-filters { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .filter-btn { padding: 7px 16px; border: 1.5px solid #e0e0e0; border-radius: 20px; background: white; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+        .filter-btn:hover { border-color: #e94560; color: #e94560; }
+        .filter-btn.active { background: #e94560; color: white; border-color: #e94560; }
+        .order-row { display: flex; align-items: center; padding: 16px; border-bottom: 1px solid #f5f5f5; gap: 14px; cursor: pointer; transition: background 0.15s; }
+        .order-row:hover { background: #fafafa; }
+        .order-row:last-child { border-bottom: none; }
+        .order-priority-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .order-priority-dot.urgent { background: #ef4444; box-shadow: 0 0 0 3px #fee2e2; }
+        .order-priority-dot.normal { background: #10b981; }
+        .order-info { flex: 1; min-width: 0; }
+        .order-title { font-weight: 600; font-size: 15px; }
+        .order-meta  { font-size: 12px; color: #888; margin-top: 3px; }
+        .order-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .assembly-header { background: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 16px; }
+        .assembly-back { padding: 8px 14px; background: #f0f2f5; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        .assembly-back:hover { background: #e0e2e5; }
+        .assembly-title { flex: 1; }
+        .assembly-title h2 { font-size: 18px; font-weight: 700; }
+        .assembly-title p  { font-size: 13px; color: #666; margin-top: 2px; }
+        .assembly-progress { background: white; border-radius: 12px; padding: 16px 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .progress-bar-wrap { background: #f0f2f5; border-radius: 8px; height: 10px; margin: 10px 0 6px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 8px; transition: width 0.4s; }
+        .assembly-item { background: white; border-radius: 10px; padding: 16px 20px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 14px; transition: all 0.2s; border-left: 4px solid transparent; }
+        .assembly-item.collected { border-left-color: #10b981; opacity: 0.75; }
+        .assembly-item.not-found { border-left-color: #ef4444; }
+        .assembly-item-check { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; cursor: pointer; transition: all 0.2s; }
+        .assembly-item-check.done { background: #10b981; border-color: #10b981; color: white; }
+        .assembly-item-check.nf   { background: #ef4444; border-color: #ef4444; color: white; }
+        .assembly-item-info { flex: 1; }
+        .assembly-item-name { font-weight: 600; font-size: 15px; }
+        .assembly-item-meta { font-size: 13px; color: #666; margin-top: 3px; }
+        .assembly-item-location { display: inline-flex; align-items: center; gap: 5px; background: #eff6ff; color: #3b82f6; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+        .assembly-item-qty { text-align: right; flex-shrink: 0; min-width: 50px; }
+        .assembly-item-qty .need  { font-size: 18px; font-weight: 700; }
+        .assembly-item-qty .unit  { font-size: 12px; color: #888; }
+        .assembly-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .scanner-modal { width: 480px; }
+        .scanner-video-wrap { position: relative; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+        .scanner-video-wrap video { width: 100%; display: block; max-height: 280px; object-fit: cover; }
+        .scanner-video-wrap canvas { display: none; }
+        .scanner-frame-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+        .scanner-frame-box { width: 180px; height: 180px; border: 3px solid #e94560; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.45); }
+        .scanner-result { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; font-size: 14px; color: #15803d; display: none; margin-bottom: 12px; }
+        .scanner-result.show { display: block; }
+        .issue-qr-img { width: 200px; height: 200px; border-radius: 10px; margin: 0 auto 12px; display: block; border: 2px solid #e0e0e0; }
+        .issuance-order-info { background: #f8fafc; border-radius: 10px; padding: 16px; margin: 16px 0; text-align: left; }
+        .issuance-order-info table { width: 100%; }
+        .issuance-order-info td { padding: 5px 0; font-size: 14px; border: none; }
+        .issuance-order-info td:first-child { color: #888; width: 140px; }
+        .issuance-order-info td:last-child { font-weight: 600; }
     </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════ AUTH ══ -->
 <div class="auth-overlay" id="authOverlay">
     <div class="auth-card">
-        <h2>🔐 Панель администратора</h2>
-        <p>Вход только для администратора склада</p>
-        <div class="form-group" style="margin-bottom:12px">
-            <label>Логин</label>
-            <input type="text" id="authUsername" class="form-control" value="admin" placeholder="admin">
-        </div>
-        <div class="form-group" style="margin-bottom:20px">
-            <label>Пароль</label>
-            <input type="password" id="authPassword" class="form-control" value="admin123" placeholder="••••••••">
-        </div>
+        <h2>🏭 Панель склада</h2>
+        <p>Кладовщик / Администратор</p>
+        <div class="form-group" style="margin-bottom:12px"><label>Логин</label><input type="text" id="authUsername" class="form-control" value="admin" placeholder="admin"></div>
+        <div class="form-group" style="margin-bottom:20px"><label>Пароль</label><input type="password" id="authPassword" class="form-control" value="admin123" placeholder="••••••••"></div>
         <div id="authAlert" class="alert alert-error"></div>
         <button class="btn btn-primary" style="width:100%" onclick="adminLogin()">Войти</button>
     </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════ SIDEBAR ══ -->
 <div class="sidebar" id="sidebar" style="display:none">
-    <div class="sidebar-logo">📦 Warehouse <span>Admin</span></div>
-    <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
-        <span class="icon">📊</span> Дашборд
-    </div>
-    <div class="nav-item" onclick="showPage('create-item')" id="nav-create-item">
-        <span class="icon">➕</span> Добавить товар
-    </div>
-    <div class="nav-item" onclick="showPage('items')" id="nav-items">
-        <span class="icon">📦</span> Каталог товаров
-    </div>
-    <div class="nav-item" onclick="showPage('locations')" id="nav-locations">
-        <span class="icon">📍</span> Локации
-    </div>
-    <div class="sidebar-user">
-        👤 <span id="sidebarUser"></span>
-        <br><a href="#" onclick="adminLogout()" style="color:#e94560;font-size:12px">Выход</a>
-    </div>
+    <div class="sidebar-logo">📦 Warehouse <span>WMS</span></div>
+    <div class="sidebar-section">Склад</div>
+    <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard"><span class="icon">📊</span> Дашборд</div>
+    <div class="nav-item" onclick="showPage('orders')" id="nav-orders"><span class="icon">📋</span> Очередь заявок <span class="nav-badge" id="pendingBadge" style="display:none">0</span></div>
+    <div class="nav-item" onclick="showPage('issuance')" id="nav-issuance"><span class="icon">📤</span> Выдача</div>
+    <div class="sidebar-section">Каталог</div>
+    <div class="nav-item" onclick="showPage('create-item')" id="nav-create-item"><span class="icon">➕</span> Добавить товар</div>
+    <div class="nav-item" onclick="showPage('items')" id="nav-items"><span class="icon">🗂️</span> Каталог товаров</div>
+    <div class="nav-item" onclick="showPage('locations')" id="nav-locations"><span class="icon">📍</span> Локации</div>
+    <div class="sidebar-user">👤 <span id="sidebarUser"></span><br><a href="#" onclick="adminLogout()" style="color:#e94560;font-size:12px">Выход</a></div>
 </div>
 
-<!-- ════════════════════════════════════════════════════ MAIN ══ -->
 <div class="main" id="mainContent" style="display:none">
 
-    <!-- ── DASHBOARD ── -->
+    <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
-        <div class="page-header">
-            <div>
-                <div class="page-title">Дашборд</div>
-                <div class="page-subtitle">Обзор склада</div>
-            </div>
-        </div>
+        <div class="page-header"><div><div class="page-title">Дашборд</div><div class="page-subtitle">Обзор склада</div></div></div>
         <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Всего товаров</div>
-                <div class="stat-value" id="statItems">—</div>
-                <div class="stat-sub">позиций в каталоге</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Локаций</div>
-                <div class="stat-value" id="statLocations">—</div>
-                <div class="stat-sub">ячеек на складе</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Мало на складе</div>
-                <div class="stat-value" style="color:#ef4444" id="statLow">—</div>
-                <div class="stat-sub">менее 5 единиц</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Категорий</div>
-                <div class="stat-value" id="statCategories">—</div>
-                <div class="stat-sub">типов деталей</div>
-            </div>
+            <div class="stat-card"><div class="stat-label">Товаров</div><div class="stat-value" id="statItems">—</div><div class="stat-sub">позиций</div></div>
+            <div class="stat-card"><div class="stat-label">Локаций</div><div class="stat-value" id="statLocations">—</div><div class="stat-sub">ячеек</div></div>
+            <div class="stat-card"><div class="stat-label">Мало на складе</div><div class="stat-value" style="color:#ef4444" id="statLow">—</div><div class="stat-sub">менее 5 единиц</div></div>
+            <div class="stat-card"><div class="stat-label">Заявок в работе</div><div class="stat-value" style="color:#f59e0b" id="statOrders">—</div><div class="stat-sub">ожидают сборки</div></div>
+            <div class="stat-card"><div class="stat-label">Готово к выдаче</div><div class="stat-value" style="color:#10b981" id="statReady">—</div><div class="stat-sub">можно забрать</div></div>
         </div>
-        <div class="card">
-            <div class="card-title">Последние добавленные товары</div>
-            <table>
-                <thead><tr>
-                    <th>Название</th><th>SKU</th><th>Категория</th>
-                    <th>Кол-во</th><th>Локация</th>
-                </tr></thead>
-                <tbody id="recentItemsTable">
-                    <tr><td colspan="5" class="empty-state">Загрузка...</td></tr>
-                </tbody>
-            </table>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+            <div class="card"><div class="card-title">⚡ Срочные заявки</div><div id="urgentOrdersList"><div class="empty-state" style="padding:20px"><div class="icon">✅</div>Срочных нет</div></div></div>
+            <div class="card"><div class="card-title">📦 Мало на складе</div>
+                <table><thead><tr><th>Товар</th><th>Остаток</th><th>Локация</th></tr></thead>
+                <tbody id="lowStockTable"><tr><td colspan="3" style="text-align:center;color:#aaa;padding:20px">Загрузка...</td></tr></tbody></table>
+            </div>
         </div>
     </div>
 
-    <!-- ── CREATE ITEM ── -->
-    <div class="page" id="page-create-item">
+    <!-- ORDERS QUEUE -->
+    <div class="page" id="page-orders">
         <div class="page-header">
-            <div>
-                <div class="page-title">Добавить товар</div>
-                <div class="page-subtitle">Заполните данные и сохраните — QR сгенерируется автоматически</div>
+            <div><div class="page-title">Очередь заявок</div><div class="page-subtitle">Заявки от механиков на получение деталей</div></div>
+            <button class="btn btn-secondary" onclick="loadOrders()">🔄 Обновить</button>
+        </div>
+        <div class="orders-filters">
+            <button class="filter-btn active" onclick="filterOrders('',this)">Все</button>
+            <button class="filter-btn" onclick="filterOrders('pending',this)">⏳ Ожидают</button>
+            <button class="filter-btn" onclick="filterOrders('collecting',this)">🔧 В сборке</button>
+            <button class="filter-btn" onclick="filterOrders('ready',this)">✅ Готовы</button>
+            <button class="filter-btn" onclick="filterOrders('issued',this)">📤 Выдано</button>
+        </div>
+        <div class="card" style="padding:0"><div id="ordersList"><div class="empty-state"><div class="icon">📋</div><p>Загрузка...</p></div></div></div>
+    </div>
+
+    <!-- ASSEMBLY -->
+    <div class="page" id="page-assembly">
+        <div class="assembly-header">
+            <button class="assembly-back" onclick="showPage('orders')">← Назад</button>
+            <div class="assembly-title"><h2 id="assemblyTitle">Сборка заявки</h2><p id="assemblySubtitle"></p></div>
+            <div id="assemblyBadge"></div>
+        </div>
+        <div class="assembly-progress">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <strong style="font-size:15px">Прогресс сборки</strong>
+                <span id="progressText" style="font-size:14px;color:#666">0 из 0</span>
+            </div>
+            <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar" style="width:0%"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;color:#666;margin-top:4px">
+                <span>🟢 <span id="collectedCount">0</span> собрано</span>
+                <span>🔴 <span id="notFoundCount">0</span> не найдено</span>
+                <span>⬜ <span id="pendingCount">0</span> осталось</span>
             </div>
         </div>
+        <div id="assemblyItemsList"></div>
+        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
+            <button class="btn btn-secondary" onclick="startScanForAssembly()">📷 Сканировать ячейку</button>
+            <button class="btn btn-warning" id="btnFinishAssembly" onclick="finishAssembly()" disabled>⚠️ Завершить сборку</button>
+            <button class="btn btn-success" id="btnCompleteAssembly" onclick="completeAssembly()" style="display:none">✅ Всё собрано — Готово</button>
+        </div>
+    </div>
 
+    <!-- ISSUANCE -->
+    <div class="page" id="page-issuance">
+        <div class="page-header"><div><div class="page-title">Выдача деталей</div><div class="page-subtitle">Сканируйте QR заявки с телефона механика</div></div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+            <div class="card" style="text-align:center">
+                <div class="card-title" style="justify-content:center">📷 Сканирование QR заявки</div>
+                <p style="color:#666;font-size:14px;margin-bottom:20px">Механик показывает QR на телефоне — наведите камеру</p>
+                <div class="scanner-video-wrap" id="issuanceScannerWrap" style="display:none">
+                    <video id="issuanceVideo" playsinline autoplay muted></video>
+                    <canvas id="issuanceCanvas"></canvas>
+                    <div class="scanner-frame-overlay"><div class="scanner-frame-box"></div></div>
+                </div>
+                <div class="scanner-result" id="issuanceScanResult"></div>
+                <button class="btn btn-primary" id="btnStartIssuanceScan" onclick="startIssuanceScan()" style="width:200px">📷 Открыть камеру</button>
+                <button class="btn btn-secondary" id="btnStopIssuanceScan" onclick="stopIssuanceScan()" style="width:200px;display:none">⏹ Остановить</button>
+                <div style="margin-top:16px;color:#aaa;font-size:13px">— или введите ID вручную —</div>
+                <div style="display:flex;gap:8px;margin-top:10px">
+                    <input type="text" id="manualOrderId" class="form-control" placeholder="WO-20240226-XXXX">
+                    <button class="btn btn-blue btn-sm" onclick="lookupOrderForIssuance(document.getElementById('manualOrderId').value)">Найти</button>
+                </div>
+            </div>
+            <div id="issuanceResultPanel">
+                <div style="display:none;background:white;border-radius:12px;padding:28px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.06)" id="issuanceOrderCard">
+                    <div style="font-size:56px;margin-bottom:12px" id="issuanceIcon">📦</div>
+                    <h3 id="issuanceOrderTitle" style="margin-bottom:12px"></h3>
+                    <div class="issuance-order-info">
+                        <table><tr><td>ID заявки</td><td id="iss-id"></td></tr><tr><td>Техника</td><td id="iss-equipment"></td></tr><tr><td>Тип работы</td><td id="iss-worktype"></td></tr><tr><td>Позиций</td><td id="iss-items"></td></tr><tr><td>Статус</td><td id="iss-status"></td></tr></table>
+                    </div>
+                    <div id="issuanceActions"></div>
+                </div>
+                <div class="empty-state" id="issuanceEmpty"><div class="icon">🔍</div><p>Отсканируйте QR заявки<br>или введите ID вручную</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CREATE ITEM -->
+    <div class="page" id="page-create-item">
+        <div class="page-header"><div><div class="page-title">Добавить товар</div><div class="page-subtitle">QR сгенерируется автоматически после сохранения</div></div></div>
         <div id="createAlert" class="alert"></div>
-
         <div class="card">
             <div class="card-title">Основная информация</div>
             <div class="form-grid">
-                <div class="form-group">
-                    <label>Название *</label>
-                    <input type="text" id="itemName" class="form-control" placeholder="Болт М10 x 50">
+                <div class="form-group"><label>Название *</label><input type="text" id="itemName" class="form-control" placeholder="Болт М10 x 50"></div>
+                <div class="form-group"><label>SKU *</label><input type="text" id="itemSku" class="form-control" placeholder="SKU-001"></div>
+                <div class="form-group"><label>Артикул (Part Number)</label><input type="text" id="itemPartNumber" class="form-control" placeholder="PN-2024-001"></div>
+                <div class="form-group"><label>Категория</label><input type="text" id="itemCategory" class="form-control" placeholder="Крепёж, Фильтры..." list="categoryList"><datalist id="categoryList"></datalist></div>
+                <div class="form-group"><label>Единица измерения</label>
+                    <select id="itemUnit" class="form-control"><option value="шт">шт — штука</option><option value="кг">кг — килограмм</option><option value="м">м — метр</option><option value="л">л — литр</option><option value="уп">уп — упаковка</option><option value="компл">компл — комплект</option></select>
                 </div>
-                <div class="form-group">
-                    <label>SKU *</label>
-                    <input type="text" id="itemSku" class="form-control" placeholder="SKU-001">
-                </div>
-                <div class="form-group">
-                    <label>Артикул (Part Number)</label>
-                    <input type="text" id="itemPartNumber" class="form-control" placeholder="PN-2024-001">
-                </div>
-                <div class="form-group">
-                    <label>Категория</label>
-                    <input type="text" id="itemCategory" class="form-control" placeholder="Крепёж, Фильтры, Масла..." list="categoryList">
-                    <datalist id="categoryList"></datalist>
-                </div>
-                <div class="form-group">
-                    <label>Единица измерения</label>
-                    <select id="itemUnit" class="form-control">
-                        <option value="шт">шт — штука</option>
-                        <option value="кг">кг — килограмм</option>
-                        <option value="м">м — метр</option>
-                        <option value="л">л — литр</option>
-                        <option value="уп">уп — упаковка</option>
-                        <option value="компл">компл — комплект</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Локация на складе</label>
-                    <select id="itemLocation" class="form-control">
-                        <option value="">— Не указана —</option>
-                    </select>
-                </div>
-                <div class="form-group full">
-                    <label>Описание</label>
-                    <textarea id="itemDescription" class="form-control" placeholder="Дополнительное описание товара..."></textarea>
-                </div>
+                <div class="form-group"><label>Локация на складе</label><select id="itemLocation" class="form-control"><option value="">— Не указана —</option></select></div>
+                <div class="form-group full"><label>Описание</label><textarea id="itemDescription" class="form-control" placeholder="Дополнительное описание..."></textarea></div>
             </div>
         </div>
-
         <div class="card">
             <div class="card-title">Информация о партии</div>
             <div class="form-grid">
-                <div class="form-group">
-                    <label>Номер партии (Batch)</label>
-                    <input type="text" id="itemBatchNumber" class="form-control" placeholder="BATCH-2024-01">
-                </div>
-                <div class="form-group">
-                    <label>Количество в партии</label>
-                    <input type="number" id="itemBatchQty" class="form-control" placeholder="100" min="0">
-                </div>
-                <div class="form-group">
-                    <label>Текущий остаток</label>
-                    <input type="number" id="itemQuantity" class="form-control" placeholder="100" min="0">
-                </div>
-                <div class="form-group">
-                    <label>Дата и время прихода партии</label>
-                    <input type="datetime-local" id="itemArrivedAt" class="form-control">
-                </div>
+                <div class="form-group"><label>Номер партии</label><input type="text" id="itemBatchNumber" class="form-control" placeholder="BATCH-2024-01"></div>
+                <div class="form-group"><label>Количество в партии</label><input type="number" id="itemBatchQty" class="form-control" placeholder="100" min="0"></div>
+                <div class="form-group"><label>Текущий остаток</label><input type="number" id="itemQuantity" class="form-control" placeholder="100" min="0"></div>
+                <div class="form-group"><label>Дата и время прихода</label><input type="datetime-local" id="itemArrivedAt" class="form-control"></div>
             </div>
         </div>
-
         <div class="card">
             <div class="card-title">Фото накладной</div>
-            <div class="photo-upload" id="photoUploadArea">
-                <input type="file" id="invoicePhoto" accept="image/*,application/pdf" onchange="previewPhoto(this)">
-                <div class="upload-icon">📄</div>
-                <p>Нажмите или перетащите фото накладной</p>
-                <p style="font-size:12px;margin-top:4px">JPG, PNG, PDF — до 20MB</p>
+            <div class="photo-upload"><input type="file" id="invoicePhoto" accept="image/*,application/pdf" onchange="previewPhoto(this)">
+                <div class="upload-icon">📄</div><p>Нажмите или перетащите фото накладной</p><p style="font-size:12px;margin-top:4px">JPG, PNG, PDF — до 20MB</p>
                 <img id="photoPreview" class="photo-preview">
             </div>
         </div>
-
         <div style="display:flex;justify-content:flex-end;gap:12px">
             <button class="btn btn-secondary" onclick="resetCreateForm()">Очистить</button>
             <button class="btn btn-primary" onclick="createItem()">💾 Сохранить и создать QR</button>
         </div>
     </div>
 
-    <!-- ── ITEMS LIST ── -->
+    <!-- ITEMS LIST -->
     <div class="page" id="page-items">
         <div class="page-header">
-            <div>
-                <div class="page-title">Каталог товаров</div>
-                <div class="page-subtitle">Все позиции на складе</div>
-            </div>
+            <div><div class="page-title">Каталог товаров</div><div class="page-subtitle">Все позиции на складе</div></div>
             <button class="btn btn-primary" onclick="showPage('create-item')">➕ Добавить товар</button>
         </div>
         <div class="card">
             <div class="table-controls">
                 <input type="text" class="search-input" placeholder="🔍 Поиск по названию, SKU, артикулу..." oninput="searchItems(this.value)">
-                <select class="form-control" style="width:180px" onchange="filterByCategory(this.value)" id="categoryFilter">
-                    <option value="">Все категории</option>
-                </select>
+                <select class="form-control" style="width:180px" onchange="filterByCategory(this.value)" id="categoryFilter"><option value="">Все категории</option></select>
                 <button class="btn btn-secondary btn-sm" onclick="loadItems()">🔄 Обновить</button>
             </div>
-            <table>
-                <thead><tr>
-                    <th>Название</th><th>SKU</th><th>Артикул</th>
-                    <th>Категория</th><th>Кол-во</th><th>Ед.</th>
-                    <th>Локация</th><th>Действия</th>
-                </tr></thead>
-                <tbody id="itemsTable">
-                    <tr><td colspan="8" class="empty-state"><div class="icon">📦</div>Загрузка...</td></tr>
-                </tbody>
-            </table>
+            <table><thead><tr><th>Название</th><th>SKU</th><th>Артикул</th><th>Категория</th><th>Кол-во</th><th>Ед.</th><th>Локация</th><th>QR</th></tr></thead>
+            <tbody id="itemsTable"><tr><td colspan="8" class="empty-state">Загрузка...</td></tr></tbody></table>
         </div>
     </div>
 
-    <!-- ── LOCATIONS ── -->
+    <!-- LOCATIONS -->
     <div class="page" id="page-locations">
-        <div class="page-header">
-            <div>
-                <div class="page-title">Локации склада</div>
-                <div class="page-subtitle">Стеллажи, полки, ячейки</div>
-            </div>
-        </div>
+        <div class="page-header"><div><div class="page-title">Локации склада</div><div class="page-subtitle">Стеллажи, полки, ячейки</div></div></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
-            <!-- Форма добавления -->
             <div class="card">
                 <div class="card-title">➕ Добавить локацию</div>
                 <div id="locationAlert" class="alert"></div>
-                <div class="form-group" style="margin-bottom:12px">
-                    <label>Код * (например: A-01, B-02)</label>
-                    <input type="text" id="locCode" class="form-control" placeholder="A-01">
-                </div>
-                <div class="form-group" style="margin-bottom:12px">
-                    <label>Описание</label>
-                    <input type="text" id="locDesc" class="form-control" placeholder="Стеллаж A, полка 1">
-                </div>
+                <div class="form-group" style="margin-bottom:12px"><label>Код * (A-01, B-02)</label><input type="text" id="locCode" class="form-control" placeholder="A-01"></div>
+                <div class="form-group" style="margin-bottom:12px"><label>Описание</label><input type="text" id="locDesc" class="form-control" placeholder="Стеллаж A, полка 1"></div>
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
-                    <div class="form-group">
-                        <label>Ряд</label>
-                        <input type="text" id="locRow" class="form-control" placeholder="A">
-                    </div>
-                    <div class="form-group">
-                        <label>Секция</label>
-                        <input type="text" id="locSection" class="form-control" placeholder="1">
-                    </div>
-                    <div class="form-group">
-                        <label>Полка</label>
-                        <input type="text" id="locShelf" class="form-control" placeholder="2">
-                    </div>
+                    <div class="form-group"><label>Ряд</label><input type="text" id="locRow" class="form-control" placeholder="A"></div>
+                    <div class="form-group"><label>Секция</label><input type="text" id="locSection" class="form-control" placeholder="1"></div>
+                    <div class="form-group"><label>Полка</label><input type="text" id="locShelf" class="form-control" placeholder="2"></div>
                 </div>
-                <button class="btn btn-primary" style="width:100%" onclick="createLocation()">
-                    📍 Создать локацию и QR
-                </button>
+                <button class="btn btn-primary" style="width:100%" onclick="createLocation()">📍 Создать локацию и QR</button>
             </div>
-
-            <!-- Список локаций -->
             <div class="card">
                 <div class="card-title">Существующие локации</div>
-                <table>
-                    <thead><tr>
-                        <th>Код</th><th>Описание</th><th>QR</th>
-                    </tr></thead>
-                    <tbody id="locationsTable">
-                        <tr><td colspan="3" class="empty-state">Загрузка...</td></tr>
-                    </tbody>
-                </table>
+                <table><thead><tr><th>Код</th><th>Описание</th><th>QR</th></tr></thead>
+                <tbody id="locationsTable"><tr><td colspan="3" class="empty-state">Загрузка...</td></tr></tbody></table>
             </div>
         </div>
     </div>
 
-</div><!-- /main -->
+</div>
 
-<!-- ══════════════════════════════════════════════ SUCCESS MODAL ══ -->
+<!-- MODALS -->
 <div class="modal-overlay" id="successModal">
-    <div class="modal">
-        <div class="modal-icon">✅</div>
-        <h3 id="modalTitle">Товар создан!</h3>
-        <p id="modalDesc">QR код сгенерирован и готов к скачиванию</p>
-        <img id="modalQR" class="qr-preview" src="" alt="QR код">
+    <div class="modal"><div class="modal-icon">✅</div><h3 id="modalTitle">Товар создан!</h3><p id="modalDesc"></p>
+        <img id="modalQR" class="qr-preview" src="" alt="QR">
         <div style="display:flex;gap:10px;justify-content:center">
             <a id="modalDownload" href="#" download class="btn btn-success">⬇️ Скачать QR</a>
-            <button class="btn btn-secondary" onclick="closeModal();showPage('create-item')">➕ Ещё товар</button>
+            <button class="btn btn-secondary" onclick="closeModal();showPage('create-item')">➕ Ещё</button>
             <button class="btn btn-secondary" onclick="closeModal();showPage('items')">📋 К списку</button>
         </div>
     </div>
 </div>
 
+<div class="modal-overlay" id="scannerModal">
+    <div class="modal scanner-modal" style="width:460px">
+        <div style="font-size:28px;margin-bottom:10px">📷 Сканирование ячейки</div>
+        <p style="color:#666;font-size:13px;margin-bottom:14px">Наведите камеру на QR код ячейки склада</p>
+        <div class="scanner-video-wrap"><video id="assemblyVideo" playsinline autoplay muted></video><canvas id="assemblyCanvas"></canvas><div class="scanner-frame-overlay"><div class="scanner-frame-box"></div></div></div>
+        <div class="scanner-result" id="assemblyScanResult"></div>
+        <button class="btn btn-secondary" onclick="closeScanner()">Отмена</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="orderQrModal">
+    <div class="modal"><div class="modal-icon">📱</div><h3>QR код заявки</h3>
+        <p id="orderQrDesc" style="margin-bottom:14px"></p>
+        <img id="orderQrImg" class="issue-qr-img" src="" alt="QR заявки">
+        <div style="display:flex;gap:10px;justify-content:center">
+            <a id="orderQrDownload" href="#" download class="btn btn-success btn-sm">⬇️ Скачать</a>
+            <button class="btn btn-secondary" onclick="closeOrderQrModal()">Закрыть</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>
-const API = '/api';
-let token = null;
-let currentUser = null;
-let allItems = [];
-let searchTimeout = null;
+const API='/api';
+let token=null,currentUser=null,allItems=[],allOrders=[],searchTimeout=null,currentOrder=null;
+let assemblyStream=null,issuanceStream=null,assemblyScanning=false,issuanceScanning=false;
 
-// ══════════════════════════════════════════════════════════ AUTH ══
-async function adminLogin() {
-    const username = document.getElementById('authUsername').value;
-    const password = document.getElementById('authPassword').value;
-    const alert = document.getElementById('authAlert');
+async function adminLogin(){
+    const u=document.getElementById('authUsername').value,p=document.getElementById('authPassword').value,a=document.getElementById('authAlert');
+    try{
+        const res=await fetch(`${API}/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+        const d=await res.json();
+        if(d.success){
+            token=d.token;currentUser=d.username;
+            document.getElementById('authOverlay').style.display='none';
+            document.getElementById('sidebar').style.display='flex';
+            document.getElementById('mainContent').style.display='block';
+            document.getElementById('sidebarUser').textContent=currentUser;
+            loadDashboard();loadLocationsForSelect();loadCategories();loadOrders();
+        }else{showAlert(a,d.error||'Неверный логин/пароль','error');}
+    }catch(e){showAlert(a,'Ошибка подключения','error');}
+}
+function adminLogout(){stopAssemblyScanner();stopIssuanceScan();token=null;document.getElementById('sidebar').style.display='none';document.getElementById('mainContent').style.display='none';document.getElementById('authOverlay').style.display='flex';}
 
-    try {
-        const res = await fetch(`${API}/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
+function showPage(n){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+    document.getElementById('page-'+n)?.classList.add('active');
+    document.getElementById('nav-'+n)?.classList.add('active');
+    if(n==='dashboard')loadDashboard();
+    if(n==='orders')loadOrders();
+    if(n==='items')loadItems();
+    if(n==='locations')loadLocations();
+    if(n!=='issuance')stopIssuanceScan();
+}
+
+async function loadDashboard(){
+    try{
+        const[iR,lR,oR]=await Promise.all([fetch(`${API}/admin/items`),fetch(`${API}/admin/locations`),fetch(`${API}/mechanic/orders`)]);
+        const iD=await iR.json(),lD=await lR.json(),oD=await oR.json();
+        const items=iD.items||[],orders=oD.orders||[];
+        const low=items.filter(i=>i.quantity<5);
+        const pending=orders.filter(o=>['pending','collecting'].includes(o.status));
+        const ready=orders.filter(o=>o.status==='ready');
+        document.getElementById('statItems').textContent=items.length;
+        document.getElementById('statLocations').textContent=(lD.locations||[]).length;
+        document.getElementById('statLow').textContent=low.length;
+        document.getElementById('statOrders').textContent=pending.length;
+        document.getElementById('statReady').textContent=ready.length;
+        const urgent=orders.filter(o=>o.priority==='urgent'&&o.status!=='issued');
+        const urgEl=document.getElementById('urgentOrdersList');
+        urgEl.innerHTML=urgent.length?urgent.map(o=>`<div class="order-row" onclick="openAssembly('${o.id}')"><div class="order-priority-dot urgent"></div><div class="order-info"><div class="order-title">${o.equipment} — ${o.work_type}</div><div class="order-meta">${o.id} · ${o.items_count||0} поз.</div></div><span class="badge badge-red">Срочно</span></div>`).join(''):'<div class="empty-state" style="padding:20px"><div class="icon">✅</div>Срочных нет</div>';
+        document.getElementById('lowStockTable').innerHTML=low.slice(0,8).map(i=>`<tr><td><strong>${i.name}</strong></td><td><span class="qty low">${i.quantity} ${i.unit||'шт'}</span></td><td>${i.location?.code?`<span class="badge badge-blue">${i.location.code}</span>`:'—'}</td></tr>`).join('')||'<tr><td colspan="3" style="text-align:center;color:#aaa;padding:16px">Всё хорошо</td></tr>';
+    }catch(e){console.error(e);}
+}
+
+async function loadOrders(){
+    try{
+        const res=await fetch(`${API}/mechanic/orders`),data=await res.json();
+        allOrders=(data.orders||[]).sort((a,b)=>{
+            if(a.priority==='urgent'&&b.priority!=='urgent')return -1;
+            if(b.priority==='urgent'&&a.priority!=='urgent')return 1;
+            return new Date(b.created_at)-new Date(a.created_at);
         });
-        const data = await res.json();
+        renderOrders(allOrders);
+        const cnt=allOrders.filter(o=>['pending','collecting'].includes(o.status)).length;
+        const b=document.getElementById('pendingBadge');b.textContent=cnt;b.style.display=cnt>0?'inline':'none';
+    }catch(e){renderOrders([]);}
+}
+function filterOrders(s,btn){document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderOrders(s?allOrders.filter(o=>o.status===s):allOrders);}
+function renderOrders(orders){
+    const c=document.getElementById('ordersList');
+    if(!orders.length){c.innerHTML='<div class="empty-state"><div class="icon">📋</div><p>Заявок нет</p></div>';return;}
+    const sMap={pending:{l:'Ожидает',b:'badge-blue'},collecting:{l:'В сборке',b:'badge-orange'},ready:{l:'Готово',b:'badge-green'},issued:{l:'Выдано',b:'badge-purple'},draft:{l:'Черновик',b:'badge-gray'}};
+    c.innerHTML=orders.map(o=>{
+        const s=sMap[o.status]||sMap.pending;
+        return `<div class="order-row" onclick="openAssembly('${o.id}')">
+            <div class="order-priority-dot ${o.priority}"></div>
+            <div class="order-info"><div class="order-title">${o.priority==='urgent'?'🔴 ':''}${o.equipment} — ${o.work_type}</div>
+            <div class="order-meta">${o.id} · № ${o.equipment_number} · ${o.items_count||0} поз. · ${formatDate(o.created_at)}</div></div>
+            <div class="order-actions">
+                <span class="badge ${s.b}">${s.l}</span>
+                ${o.status==='pending'?`<button class="btn btn-warning btn-sm" onclick="event.stopPropagation();startCollecting('${o.id}')">🔧 Начать</button>`:''}
+                ${o.status==='collecting'?`<button class="btn btn-blue btn-sm" onclick="event.stopPropagation();openAssembly('${o.id}')">📦 Продолжить</button>`:''}
+                ${o.status==='ready'?`<button class="btn btn-success btn-sm" onclick="event.stopPropagation();showOrderQR('${o.id}')">📱 QR выдачи</button>`:''}
+            </div></div>`;
+    }).join('');
+}
+async function startCollecting(id){try{await fetch(`${API}/mechanic/order/${id}/status`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'collecting'})});}catch(e){}await loadOrders();openAssembly(id);}
 
-        if (data.success) {
-            token = data.token;
-            currentUser = data.username;
-            document.getElementById('authOverlay').style.display = 'none';
-            document.getElementById('sidebar').style.display = 'flex';
-            document.getElementById('mainContent').style.display = 'block';
-            document.getElementById('sidebarUser').textContent = currentUser;
-            loadDashboard();
-            loadLocationsForSelect();
-            loadCategories();
-        } else {
-            showAlert(alert, data.error || 'Неверный логин/пароль', 'error');
+async function openAssembly(orderId){
+    let order=allOrders.find(o=>o.id===orderId);
+    if(!order){await loadOrders();order=allOrders.find(o=>o.id===orderId);}
+    if(!order)return;
+    currentOrder=JSON.parse(JSON.stringify(order));
+    document.getElementById('assemblyTitle').textContent=`${order.equipment} — ${order.work_type}`;
+    document.getElementById('assemblySubtitle').textContent=`${order.id} · № ${order.equipment_number}`;
+    const sMap={pending:'badge-blue',collecting:'badge-orange',ready:'badge-green',issued:'badge-purple'};
+    const sLabel={pending:'Ожидает',collecting:'В сборке',ready:'Готово',issued:'Выдано'};
+    document.getElementById('assemblyBadge').innerHTML=`<span class="badge ${sMap[order.status]||'badge-gray'}">${sLabel[order.status]||order.status}</span>`;
+    renderAssemblyItems(currentOrder.items||[]);updateProgress();
+    document.querySelector('#page-assembly .btn-warning').disabled=false;
+    showPage('assembly');
+}
+function renderAssemblyItems(items){
+    const c=document.getElementById('assemblyItemsList');
+    if(!items.length){c.innerHTML='<div class="empty-state"><div class="icon">📦</div><p>Нет позиций</p></div>';return;}
+    c.innerHTML=items.map((item,i)=>`
+        <div class="assembly-item ${item.collect_status||''}" id="asm-item-${i}">
+            <div class="assembly-item-check ${item.collect_status==='collected'?'done':item.collect_status==='not-found'?'nf':''}" onclick="toggleItemStatus(${i})">
+                ${item.collect_status==='collected'?'✓':item.collect_status==='not-found'?'✕':''}
+            </div>
+            <div class="assembly-item-info">
+                <div class="assembly-item-name">${item.name}</div>
+                <div class="assembly-item-meta">${item.part_number?`Арт: <strong>${item.part_number}</strong> · `:''}${item.justification||''}</div>
+                <div style="margin-top:6px;display:flex;gap:8px;align-items:center">
+                    ${item.item_id?`<span class="assembly-item-location">📍 ${item.location_code||'уточнить'}</span>`:'<span class="badge badge-yellow">✏️ Ручной ввод</span>'}
+                    ${item.photo_url?`<img src="${item.photo_url}" style="height:28px;border-radius:4px;cursor:pointer" onclick="window.open('${item.photo_url}')">` :''}
+                </div>
+            </div>
+            <div class="assembly-item-qty"><div class="need">${item.quantity}</div><div class="unit">${item.unit||'шт'}</div></div>
+            <div class="assembly-item-actions">
+                <button class="btn btn-success btn-sm" onclick="markItem(${i},'collected')">✓ Собрано</button>
+                <button class="btn btn-sm" style="background:#fef2f2;color:#dc2626" onclick="markItem(${i},'not-found')">✕ Нет</button>
+            </div>
+        </div>`).join('');
+}
+function markItem(i,s){if(!currentOrder?.items)return;currentOrder.items[i].collect_status=s;renderAssemblyItems(currentOrder.items);updateProgress();}
+function toggleItemStatus(i){
+    if(!currentOrder?.items)return;
+    const item=currentOrder.items[i];
+    item.collect_status=!item.collect_status?'collected':item.collect_status==='collected'?'not-found':'';
+    renderAssemblyItems(currentOrder.items);updateProgress();
+}
+function updateProgress(){
+    const items=currentOrder?.items||[];
+    const col=items.filter(i=>i.collect_status==='collected').length;
+    const nf=items.filter(i=>i.collect_status==='not-found').length;
+    const pend=items.length-col-nf;
+    const pct=items.length?Math.round((col+nf)/items.length*100):0;
+    document.getElementById('progressBar').style.width=pct+'%';
+    document.getElementById('progressText').textContent=`${col+nf} из ${items.length}`;
+    document.getElementById('collectedCount').textContent=col;
+    document.getElementById('notFoundCount').textContent=nf;
+    document.getElementById('pendingCount').textContent=pend;
+    const allDone=pend===0&&items.length>0,allCol=col===items.length&&items.length>0;
+    document.getElementById('btnFinishAssembly').disabled=!allDone||allCol;
+    document.getElementById('btnFinishAssembly').style.display=allCol?'none':'inline-flex';
+    document.getElementById('btnCompleteAssembly').style.display=allCol?'inline-flex':'none';
+}
+async function completeAssembly(){if(!currentOrder)return;try{await fetch(`${API}/mechanic/order/${currentOrder.id}/status`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'ready'})});}catch(e){}await loadOrders();showOrderQR(currentOrder.id);}
+async function finishAssembly(){
+    if(!currentOrder)return;
+    const nf=(currentOrder.items||[]).filter(i=>i.collect_status==='not-found');
+    if(!confirm(nf.length?`${nf.length} позиций не найдено. Завершить сборку?`:'Завершить сборку?'))return;
+    try{await fetch(`${API}/mechanic/order/${currentOrder.id}/status`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'ready'})});}catch(e){}
+    await loadOrders();showOrderQR(currentOrder.id);
+}
+async function showOrderQR(orderId){
+    try{await fetch(`${API}/mechanic/order/${orderId}/qr`,{method:'POST'});}catch(e){}
+    const qrUrl=`/qrcodes/order_${orderId}.png?t=${Date.now()}`;
+    document.getElementById('orderQrDesc').textContent=`Заявка ${orderId} готова к выдаче`;
+    document.getElementById('orderQrImg').src=qrUrl;
+    document.getElementById('orderQrDownload').href=qrUrl;
+    document.getElementById('orderQrDownload').download=`qr_order_${orderId}.png`;
+    document.getElementById('orderQrModal').classList.add('show');
+}
+function closeOrderQrModal(){document.getElementById('orderQrModal').classList.remove('show');}
+
+function startScanForAssembly(){document.getElementById('scannerModal').classList.add('show');startAssemblyScanner();}
+function closeScanner(){document.getElementById('scannerModal').classList.remove('show');stopAssemblyScanner();}
+async function startAssemblyScanner(){
+    try{
+        assemblyStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+        const v=document.getElementById('assemblyVideo');v.srcObject=assemblyStream;await v.play();
+        assemblyScanning=true;scanAssemblyQR();
+    }catch(e){alert('Ошибка камеры: '+e.message);}
+}
+function stopAssemblyScanner(){assemblyScanning=false;if(assemblyStream){assemblyStream.getTracks().forEach(t=>t.stop());assemblyStream=null;}}
+function scanAssemblyQR(){
+    if(!assemblyScanning)return;
+    const v=document.getElementById('assemblyVideo'),c=document.getElementById('assemblyCanvas'),ctx=c.getContext('2d');
+    if(v.videoWidth>0){c.width=v.videoWidth;c.height=v.videoHeight;ctx.drawImage(v,0,0);
+        const code=jsQR(ctx.getImageData(0,0,c.width,c.height).data,c.width,c.height);
+        if(code&&code.data.startsWith('LOC:')){
+            const r=document.getElementById('assemblyScanResult');r.textContent=`✅ Ячейка: ${code.data.substring(4)}`;r.classList.add('show');
+            stopAssemblyScanner();setTimeout(closeScanner,1500);return;
         }
-    } catch (e) {
-        showAlert(alert, 'Ошибка подключения', 'error');
     }
+    requestAnimationFrame(scanAssemblyQR);
 }
 
-function adminLogout() {
-    token = null;
-    document.getElementById('sidebar').style.display = 'none';
-    document.getElementById('mainContent').style.display = 'none';
-    document.getElementById('authOverlay').style.display = 'flex';
+async function startIssuanceScan(){
+    try{
+        issuanceStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+        const v=document.getElementById('issuanceVideo');v.srcObject=issuanceStream;await v.play();
+        document.getElementById('issuanceScannerWrap').style.display='block';
+        document.getElementById('btnStartIssuanceScan').style.display='none';
+        document.getElementById('btnStopIssuanceScan').style.display='block';
+        issuanceScanning=true;scanIssuanceQR();
+    }catch(e){alert('Ошибка камеры: '+e.message);}
 }
-
-// ══════════════════════════════════════════════════════════ NAV ══
-function showPage(name) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('page-' + name).classList.add('active');
-    const nav = document.getElementById('nav-' + name);
-    if (nav) nav.classList.add('active');
-
-    if (name === 'dashboard') loadDashboard();
-    if (name === 'items') loadItems();
-    if (name === 'locations') loadLocations();
+function stopIssuanceScan(){
+    issuanceScanning=false;
+    if(issuanceStream){issuanceStream.getTracks().forEach(t=>t.stop());issuanceStream=null;}
+    document.getElementById('issuanceScannerWrap').style.display='none';
+    document.getElementById('btnStartIssuanceScan').style.display='block';
+    document.getElementById('btnStopIssuanceScan').style.display='none';
 }
-
-// ════════════════════════════════════════════════════ DASHBOARD ══
-async function loadDashboard() {
-    try {
-        const [itemsRes, locsRes, catsRes] = await Promise.all([
-            fetch(`${API}/admin/items`),
-            fetch(`${API}/admin/locations`),
-            fetch(`${API}/admin/categories`)
-        ]);
-        const items = await itemsRes.json();
-        const locs  = await locsRes.json();
-        const cats  = await catsRes.json();
-
-        const itemList = items.items || [];
-        const low = itemList.filter(i => i.quantity < 5).length;
-
-        document.getElementById('statItems').textContent = itemList.length;
-        document.getElementById('statLocations').textContent = (locs.locations || []).length;
-        document.getElementById('statLow').textContent = low;
-        document.getElementById('statCategories').textContent = (cats.categories || []).length;
-
-        const tbody = document.getElementById('recentItemsTable');
-        const recent = itemList.slice(0, 8);
-        if (recent.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Нет товаров</td></tr>';
-        } else {
-            tbody.innerHTML = recent.map(item => `
-                <tr>
-                    <td><strong>${item.name}</strong></td>
-                    <td><span class="badge badge-gray">${item.sku}</span></td>
-                    <td>${item.category ? `<span class="badge badge-blue">${item.category}</span>` : '—'}</td>
-                    <td><span class="qty ${item.quantity < 5 ? 'low' : ''}">${item.quantity} ${item.unit || 'шт'}</span></td>
-                    <td>${item.location?.code || '—'}</td>
-                </tr>
-            `).join('');
+function scanIssuanceQR(){
+    if(!issuanceScanning)return;
+    const v=document.getElementById('issuanceVideo'),c=document.getElementById('issuanceCanvas'),ctx=c.getContext('2d');
+    if(v.videoWidth>0){c.width=v.videoWidth;c.height=v.videoHeight;ctx.drawImage(v,0,0);
+        const code=jsQR(ctx.getImageData(0,0,c.width,c.height).data,c.width,c.height);
+        if(code&&code.data.startsWith('WO:')){
+            const r=document.getElementById('issuanceScanResult');r.textContent=`✅ Заявка: ${code.data.substring(3)}`;r.classList.add('show');
+            stopIssuanceScan();lookupOrderForIssuance(code.data.substring(3));return;
         }
-    } catch(e) { console.error(e); }
+    }
+    requestAnimationFrame(scanIssuanceQR);
+}
+async function lookupOrderForIssuance(orderId){
+    if(!orderId)return;
+    const empty=document.getElementById('issuanceEmpty'),card=document.getElementById('issuanceOrderCard');
+    try{
+        const res=await fetch(`${API}/mechanic/order/${orderId}`),data=await res.json();
+        if(!data.success){empty.style.display='block';card.style.display='none';return;}
+        const o=data.order;
+        document.getElementById('iss-id').textContent=o.id;
+        document.getElementById('iss-equipment').textContent=`${o.equipment} (${o.equipment_number})`;
+        document.getElementById('iss-worktype').textContent=o.work_type;
+        document.getElementById('iss-items').textContent=(o.items||[]).length+' позиций';
+        const sL={pending:'⏳ Ожидает',collecting:'🔧 В сборке',ready:'✅ Готово к выдаче',issued:'📤 Выдано'};
+        document.getElementById('iss-status').innerHTML=`<span class="badge ${o.status==='ready'?'badge-green':o.status==='issued'?'badge-purple':'badge-orange'}">${sL[o.status]||o.status}</span>`;
+        const act=document.getElementById('issuanceActions');
+        if(o.status==='ready'){
+            document.getElementById('issuanceIcon').textContent='✅';
+            document.getElementById('issuanceOrderTitle').textContent='Заявка готова к выдаче!';
+            act.innerHTML=`<button class="btn btn-success" style="width:100%" onclick="confirmIssuance('${o.id}')">🤝 Подтвердить выдачу и списать остатки</button>`;
+        }else if(o.status==='issued'){
+            document.getElementById('issuanceIcon').textContent='📤';
+            document.getElementById('issuanceOrderTitle').textContent='Уже выдано';
+            act.innerHTML=`<span class="badge badge-purple" style="font-size:14px;padding:8px 16px">Заявка закрыта</span>`;
+        }else{
+            document.getElementById('issuanceIcon').textContent='⏳';
+            document.getElementById('issuanceOrderTitle').textContent='Заявка ещё не готова';
+            act.innerHTML=`<p style="color:#888;font-size:14px">${sL[o.status]||o.status}</p>`;
+        }
+        empty.style.display='none';card.style.display='block';
+    }catch(e){empty.style.display='block';card.style.display='none';}
+}
+async function confirmIssuance(orderId){
+    if(!confirm('Подтвердить выдачу? Остатки на складе будут списаны.'))return;
+    try{await fetch(`${API}/mechanic/order/${orderId}/issue`,{method:'POST',headers:{'Content-Type':'application/json'}});}catch(e){}
+    await loadOrders();
+    document.getElementById('issuanceIcon').textContent='🎉';
+    document.getElementById('issuanceOrderTitle').textContent='Выдача подтверждена!';
+    document.getElementById('issuanceActions').innerHTML=`<p style="color:#10b981;font-weight:600">Остатки списаны. Заявка закрыта.</p>`;
+    document.getElementById('iss-status').innerHTML=`<span class="badge badge-purple">📤 Выдано</span>`;
 }
 
-// ══════════════════════════════════════════════════ CREATE ITEM ══
-async function createItem() {
-    const alert = document.getElementById('createAlert');
-
-    const name = document.getElementById('itemName').value.trim();
-    const sku  = document.getElementById('itemSku').value.trim();
-    if (!name || !sku) {
-        showAlert(alert, 'Заполните обязательные поля: Название и SKU', 'error');
-        return;
-    }
-
-    const arrivedAt = document.getElementById('itemArrivedAt').value;
-
-    const payload = {
-        name,
-        sku,
-        description:     document.getElementById('itemDescription').value,
-        quantity:        parseInt(document.getElementById('itemQuantity').value) || 0,
-        unit:            document.getElementById('itemUnit').value,
-        category:        document.getElementById('itemCategory').value,
-        part_number:     document.getElementById('itemPartNumber').value,
-        batch_number:    document.getElementById('itemBatchNumber').value,
-        batch_quantity:  parseInt(document.getElementById('itemBatchQty').value) || 0,
-        batch_arrived_at: arrivedAt || '',
-        location_id:     document.getElementById('itemLocation').value,
-    };
-
-    try {
-        const res = await fetch(`${API}/admin/item`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-
-        if (data.success) {
-            // Загружаем фото если выбрано
-            const photoFile = document.getElementById('invoicePhoto').files[0];
-            if (photoFile) {
-                const form = new FormData();
-                form.append('photo', photoFile);
-                await fetch(`${API}/admin/item/${data.item.id}/photo`, {
-                    method: 'POST', body: form
-                });
-            }
-
-            // Показываем модал с QR
-            document.getElementById('modalTitle').textContent = `Товар "${data.item.name}" создан!`;
-            document.getElementById('modalDesc').textContent = `ID: ${data.item.id} · SKU: ${data.item.sku}`;
-            document.getElementById('modalQR').src = data.qr_url;
-            document.getElementById('modalDownload').href = data.qr_url;
-            document.getElementById('modalDownload').download = `qr_${data.item.id}.png`;
+async function createItem(){
+    const a=document.getElementById('createAlert'),name=document.getElementById('itemName').value.trim(),sku=document.getElementById('itemSku').value.trim();
+    if(!name||!sku){showAlert(a,'Заполните обязательные поля: Название и SKU','error');return;}
+    const payload={name,sku,description:document.getElementById('itemDescription').value,quantity:parseInt(document.getElementById('itemQuantity').value)||0,unit:document.getElementById('itemUnit').value,category:document.getElementById('itemCategory').value,part_number:document.getElementById('itemPartNumber').value,batch_number:document.getElementById('itemBatchNumber').value,batch_quantity:parseInt(document.getElementById('itemBatchQty').value)||0,batch_arrived_at:document.getElementById('itemArrivedAt').value||'',location_id:document.getElementById('itemLocation').value};
+    try{
+        const res=await fetch(`${API}/admin/item`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),data=await res.json();
+        if(data.success){
+            const f=document.getElementById('invoicePhoto').files[0];
+            if(f){const fm=new FormData();fm.append('photo',f);await fetch(`${API}/admin/item/${data.item.id}/photo`,{method:'POST',body:fm});}
+            document.getElementById('modalTitle').textContent=`Товар "${data.item.name}" создан!`;
+            document.getElementById('modalDesc').textContent=`ID: ${data.item.id} · SKU: ${data.item.sku}`;
+            document.getElementById('modalQR').src=data.qr_url;
+            document.getElementById('modalDownload').href=data.qr_url;
+            document.getElementById('modalDownload').download=`qr_${data.item.id}.png`;
             document.getElementById('successModal').classList.add('show');
-
-            resetCreateForm();
-            loadCategories();
-        } else {
-            showAlert(alert, data.error || 'Ошибка создания', 'error');
-        }
-    } catch(e) {
-        showAlert(alert, 'Ошибка: ' + e.message, 'error');
-    }
+            resetCreateForm();loadCategories();
+        }else{showAlert(a,data.error||'Ошибка создания','error');}
+    }catch(e){showAlert(a,'Ошибка: '+e.message,'error');}
 }
+function resetCreateForm(){['itemName','itemSku','itemPartNumber','itemCategory','itemDescription','itemBatchNumber','itemBatchQty','itemQuantity','itemArrivedAt'].forEach(id=>document.getElementById(id).value='');document.getElementById('itemUnit').value='шт';document.getElementById('itemLocation').value='';document.getElementById('invoicePhoto').value='';document.getElementById('photoPreview').style.display='none';hideAlert(document.getElementById('createAlert'));}
+function previewPhoto(input){const p=document.getElementById('photoPreview');if(input.files?.[0]?.type.startsWith('image/')){const r=new FileReader();r.onload=e=>{p.src=e.target.result;p.style.display='block';};r.readAsDataURL(input.files[0]);}}
+async function loadItems(search='',category=''){let url=`${API}/admin/items?`;if(search)url+=`search=${encodeURIComponent(search)}&`;if(category)url+=`category=${encodeURIComponent(category)}`;try{const res=await fetch(url),data=await res.json();allItems=data.items||[];renderItemsTable(allItems);}catch(e){}}
+function renderItemsTable(items){const t=document.getElementById('itemsTable');if(!items.length){t.innerHTML='<tr><td colspan="8" class="empty-state"><div class="icon">📦</div>Нет товаров</td></tr>';return;}t.innerHTML=items.map(i=>`<tr><td><strong>${i.name}</strong><br><small style="color:#aaa">${i.description||''}</small></td><td><span class="badge badge-gray">${i.sku}</span></td><td style="color:#888">${i.part_number||'—'}</td><td>${i.category?`<span class="badge badge-blue">${i.category}</span>`:'—'}</td><td><span class="qty ${i.quantity<5?'low':''}">${i.quantity}</span></td><td>${i.unit||'шт'}</td><td>${i.location?.code?`<span class="badge badge-green">${i.location.code}</span>`:'—'}</td><td><a href="/api/admin/item/${i.id}/qr" download class="btn btn-sm btn-secondary">📥 QR</a></td></tr>`).join('');}
+function searchItems(v){clearTimeout(searchTimeout);searchTimeout=setTimeout(()=>loadItems(v,document.getElementById('categoryFilter').value),300);}
+function filterByCategory(c){loadItems(document.querySelector('.search-input').value,c);}
+async function loadLocations(){try{const res=await fetch(`${API}/admin/locations`),data=await res.json();const t=document.getElementById('locationsTable'),locs=data.locations||[];t.innerHTML=locs.length?locs.map(l=>`<tr><td><strong>${l.code}</strong></td><td style="color:#666">${l.description||'—'}</td><td><a href="/api/admin/location/${l.id}/qr" download class="btn btn-sm btn-secondary">📥 QR</a></td></tr>`).join(''):'<tr><td colspan="3" class="empty-state">Нет локаций</td></tr>';}catch(e){}}
+async function loadLocationsForSelect(){try{const res=await fetch(`${API}/admin/locations`),data=await res.json();const sel=document.getElementById('itemLocation');(data.locations||[]).forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=`${l.code} — ${l.description||''}`;sel.appendChild(o);});}catch(e){}}
+async function createLocation(){const a=document.getElementById('locationAlert'),code=document.getElementById('locCode').value.trim();if(!code){showAlert(a,'Укажите код','error');return;}try{const res=await fetch(`${API}/admin/location`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code,description:document.getElementById('locDesc').value,row:document.getElementById('locRow').value,section:document.getElementById('locSection').value,shelf:document.getElementById('locShelf').value})}),data=await res.json();if(data.success){showAlert(a,`Локация ${code} создана!`,'success');['locCode','locDesc','locRow','locSection','locShelf'].forEach(id=>document.getElementById(id).value='');loadLocations();const sel=document.getElementById('itemLocation'),opt=document.createElement('option');opt.value=data.location.id;opt.textContent=`${data.location.code} — ${data.location.description||''}`;sel.appendChild(opt);}else{showAlert(a,data.error,'error');}}catch(e){showAlert(a,'Ошибка: '+e.message,'error');}}
+async function loadCategories(){try{const res=await fetch(`${API}/admin/categories`),data=await res.json();const cats=data.categories||[];document.getElementById('categoryList').innerHTML=cats.map(c=>`<option value="${c}">`).join('');const sel=document.getElementById('categoryFilter'),cur=sel.value;sel.innerHTML='<option value="">Все категории</option>'+cats.map(c=>`<option value="${c}" ${c===cur?'selected':''}>${c}</option>`).join('');}catch(e){}}
 
-function resetCreateForm() {
-    ['itemName','itemSku','itemPartNumber','itemCategory','itemDescription',
-     'itemBatchNumber','itemBatchQty','itemQuantity','itemArrivedAt'].forEach(id => {
-        document.getElementById(id).value = '';
-    });
-    document.getElementById('itemUnit').value = 'шт';
-    document.getElementById('itemLocation').value = '';
-    document.getElementById('invoicePhoto').value = '';
-    document.getElementById('photoPreview').style.display = 'none';
-    hideAlert(document.getElementById('createAlert'));
-}
-
-function previewPhoto(input) {
-    const preview = document.getElementById('photoPreview');
-    if (input.files && input.files[0]) {
-        const file = input.files[0];
-        if (file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = e => {
-                preview.src = e.target.result;
-                preview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        } else {
-            preview.style.display = 'none';
-            document.querySelector('.photo-upload p').textContent = '📄 ' + file.name;
-        }
-    }
-}
-
-// ════════════════════════════════════════════════════ ITEMS LIST ══
-async function loadItems(search = '', category = '') {
-    let url = `${API}/admin/items?`;
-    if (search) url += `search=${encodeURIComponent(search)}&`;
-    if (category) url += `category=${encodeURIComponent(category)}`;
-
-    try {
-        const res = await fetch(url);
-        const data = await res.json();
-        allItems = data.items || [];
-        renderItemsTable(allItems);
-    } catch(e) { console.error(e); }
-}
-
-function renderItemsTable(items) {
-    const tbody = document.getElementById('itemsTable');
-    if (!items.length) {
-        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="icon">📦</div>Товары не найдены</div></td></tr>';
-        return;
-    }
-    tbody.innerHTML = items.map(item => `
-        <tr>
-            <td><strong>${item.name}</strong><br><small style="color:#aaa">${item.description || ''}</small></td>
-            <td><span class="badge badge-gray">${item.sku}</span></td>
-            <td style="color:#888">${item.part_number || '—'}</td>
-            <td>${item.category ? `<span class="badge badge-blue">${item.category}</span>` : '—'}</td>
-            <td><span class="qty ${item.quantity < 5 ? 'low' : ''}">${item.quantity}</span></td>
-            <td>${item.unit || 'шт'}</td>
-            <td>${item.location?.code ? `<span class="badge badge-green">${item.location.code}</span>` : '—'}</td>
-            <td>
-                <a href="/api/admin/item/${item.id}/qr" download class="btn btn-sm btn-secondary" title="Скачать QR">📥 QR</a>
-            </td>
-        </tr>
-    `).join('');
-}
-
-function searchItems(val) {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        const cat = document.getElementById('categoryFilter').value;
-        loadItems(val, cat);
-    }, 300);
-}
-
-function filterByCategory(cat) {
-    const search = document.querySelector('.search-input').value;
-    loadItems(search, cat);
-}
-
-// ══════════════════════════════════════════════════ LOCATIONS ══
-async function loadLocations() {
-    try {
-        const res = await fetch(`${API}/admin/locations`);
-        const data = await res.json();
-        const locs = data.locations || [];
-        const tbody = document.getElementById('locationsTable');
-        if (!locs.length) {
-            tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Нет локаций</td></tr>';
-            return;
-        }
-        tbody.innerHTML = locs.map(loc => `
-            <tr>
-                <td><strong>${loc.code}</strong></td>
-                <td style="color:#666">${loc.description || '—'}</td>
-                <td>
-                    <a href="/api/admin/location/${loc.id}/qr" download class="btn btn-sm btn-secondary">📥 QR</a>
-                </td>
-            </tr>
-        `).join('');
-    } catch(e) { console.error(e); }
-}
-
-async function loadLocationsForSelect() {
-    try {
-        const res = await fetch(`${API}/admin/locations`);
-        const data = await res.json();
-        const sel = document.getElementById('itemLocation');
-        const locs = data.locations || [];
-        locs.forEach(loc => {
-            const opt = document.createElement('option');
-            opt.value = loc.id;
-            opt.textContent = `${loc.code} — ${loc.description || ''}`;
-            sel.appendChild(opt);
-        });
-    } catch(e) {}
-}
-
-async function createLocation() {
-    const alert = document.getElementById('locationAlert');
-    const code = document.getElementById('locCode').value.trim();
-    if (!code) { showAlert(alert, 'Укажите код локации', 'error'); return; }
-
-    try {
-        const res = await fetch(`${API}/admin/location`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                code,
-                description: document.getElementById('locDesc').value,
-                row:         document.getElementById('locRow').value,
-                section:     document.getElementById('locSection').value,
-                shelf:       document.getElementById('locShelf').value,
-            })
-        });
-        const data = await res.json();
-        if (data.success) {
-            showAlert(alert, `Локация ${code} создана! QR готов.`, 'success');
-            ['locCode','locDesc','locRow','locSection','locShelf'].forEach(id => document.getElementById(id).value = '');
-            loadLocations();
-            // Обновляем select в форме товара
-            const sel = document.getElementById('itemLocation');
-            const opt = document.createElement('option');
-            opt.value = data.location.id;
-            opt.textContent = `${data.location.code} — ${data.location.description || ''}`;
-            sel.appendChild(opt);
-        } else {
-            showAlert(alert, data.error, 'error');
-        }
-    } catch(e) {
-        showAlert(alert, 'Ошибка: ' + e.message, 'error');
-    }
-}
-
-// ══════════════════════════════════════════════════ CATEGORIES ══
-async function loadCategories() {
-    try {
-        const res = await fetch(`${API}/admin/categories`);
-        const data = await res.json();
-        const cats = data.categories || [];
-
-        // datalist для autocomplete
-        const dl = document.getElementById('categoryList');
-        dl.innerHTML = cats.map(c => `<option value="${c}">`).join('');
-
-        // filter select
-        const sel = document.getElementById('categoryFilter');
-        const cur = sel.value;
-        sel.innerHTML = '<option value="">Все категории</option>' +
-            cats.map(c => `<option value="${c}" ${c===cur?'selected':''}>${c}</option>`).join('');
-    } catch(e) {}
-}
-
-// ════════════════════════════════════════════════════════ UTILS ══
-function showAlert(el, msg, type) {
-    el.textContent = msg;
-    el.className = `alert alert-${type} show`;
-}
-function hideAlert(el) {
-    el.className = 'alert';
-    el.textContent = '';
-}
-function closeModal() {
-    document.getElementById('successModal').classList.remove('show');
-}
-
-// Enter на форме логина
-document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && document.getElementById('authOverlay').style.display !== 'none') {
-        adminLogin();
-    }
+function showAlert(el,msg,type){el.textContent=msg;el.className=`alert alert-${type} show`;}
+function hideAlert(el){if(el){el.className='alert';el.textContent='';}}
+function closeModal(){document.getElementById('successModal').classList.remove('show');}
+function formatDate(s){if(!s)return '—';return new Date(s).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+document.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&document.getElementById('authOverlay').style.display!=='none')adminLogin();
+    if(e.key==='Escape'){closeModal();closeScanner();closeOrderQrModal();}
 });
 </script>
 </body>
