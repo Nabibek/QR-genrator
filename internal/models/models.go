@@ -20,18 +20,23 @@ type Location struct {
 
 // Item represents an inventory item
 type Item struct {
-	ID          string         `gorm:"primaryKey" json:"id"`
-	Name        string         `json:"name"`
-	SKU         string         `gorm:"uniqueIndex" json:"sku"`
-	Description string         `json:"description"`
-	Quantity    int            `json:"quantity"`
-	PartNumber  string         `json:"part_number"`
-	BatchNumber string         `json:"batch_number"`
-	LocationID  string         `gorm:"index" json:"location_id"`
-	Location    *Location      `gorm:"foreignKey:LocationID;references:ID" json:"location,omitempty"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
+	ID             string         `gorm:"primaryKey" json:"id"`
+	Name           string         `json:"name"`
+	SKU            string         `gorm:"uniqueIndex" json:"sku"`
+	Description    string         `json:"description"`
+	Quantity       int            `json:"quantity"`
+	Unit           string         `json:"unit"`     // шт, кг, м, л
+	Category       string         `json:"category"` // категория/тип
+	PartNumber     string         `json:"part_number"`
+	BatchNumber    string         `json:"batch_number"`
+	BatchQuantity  int            `json:"batch_quantity"`   // количество привезённого
+	BatchArrivedAt *time.Time     `json:"batch_arrived_at"` // время приезда партии
+	InvoicePhoto   string         `json:"invoice_photo"`    // путь к фото накладной
+	LocationID     string         `gorm:"index" json:"location_id"`
+	Location       *Location      `gorm:"foreignKey:LocationID;references:ID" json:"location,omitempty"`
+	CreatedAt      time.Time      `json:"created_at"`
+	UpdatedAt      time.Time      `json:"updated_at"`
+	DeletedAt      gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 // User represents a warehouse operator/admin
@@ -62,7 +67,6 @@ type ItemMovement struct {
 	CreatedAt      time.Time `json:"created_at"`
 }
 
-// TableName specifies table name for ItemMovement (plural)
 func (ItemMovement) TableName() string {
 	return "item_movements"
 }

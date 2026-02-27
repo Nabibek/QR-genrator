@@ -7,12 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// SetupRoutes - регистрирует все API маршруты
 func SetupRoutes(router *gin.Engine) {
-	// Сначала регистрируем API маршруты, потом статические файлы
-	// (порядок важен!)
 
-	// Health check (для проверки доступности сервера)
+	// Health check
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "ok",
@@ -20,30 +17,45 @@ func SetupRoutes(router *gin.Engine) {
 		})
 	})
 
-	// Группа API маршрутов с префиксом /api
+	// Публичные маршруты
 	api := router.Group("/api")
 	{
-		// Аутентификация
 		api.POST("/login", handlers.Login)
 		api.GET("/me", handlers.CurrentUser)
-
-		// Товары
 		api.GET("/item/:id", handlers.GetItem)
 		api.GET("/item/:id/history", handlers.GetItemHistory)
-
-		// Перемещения
 		api.POST("/move", handlers.MoveItem)
 	}
 
-	// Статические файлы (HTML, CSS, JS) - регистрируем ПОСЛЕ API
-	// router.Static("/", "./static") - перехватит все запросы
-	// вместо этого раздаём файлы селективно
+	// Админ маршруты
+	admin := router.Group("/api/admin")
+	{
+		// Товары
+		admin.POST("/item", handlers.AdminCreateItem)
+		admin.GET("/items", handlers.AdminGetItems)
+		admin.PUT("/item/:id", handlers.AdminUpdateItem)
+		admin.DELETE("/item/:id", handlers.AdminDeleteItem)
+		admin.GET("/item/:id/qr", handlers.AdminGetItemQR)
+		admin.POST("/item/:id/photo", handlers.AdminUploadInvoicePhoto)
+
+		// Локации
+		admin.GET("/locations", handlers.AdminGetLocations)
+		admin.POST("/location", handlers.AdminCreateLocation)
+		admin.GET("/location/:id/qr", handlers.AdminGetLocationQR)
+
+		// Категории
+		admin.GET("/categories", handlers.AdminGetCategories)
+	}
+
+	// Статические файлы
 	router.StaticFile("/", "./static/index.html")
+	router.StaticFile("/admin", "./static/admin.html")
 	router.Static("/css", "./static/css")
 	router.Static("/js", "./static/js")
 	router.Static("/qrcodes", "./qrcodes")
+	router.Static("/invoices", "./static/invoices")
 
-	// 404 обработчик
+	// 404
 	router.NoRoute(func(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{
 			"success": false,
