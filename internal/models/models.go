@@ -99,3 +99,17 @@ type ProcurementTask struct {
 	Status     string    `json:"status"`
 	CreatedAt  time.Time `json:"created_at"`
 }
+
+// Equipment — единица спецтехники (конкретная машина с гос. номером)
+type Equipment struct {
+	ID            string     `gorm:"primaryKey" json:"id"`
+	Name          string     `json:"name"`                             // Экскаватор Komatsu PC200
+	Type          string     `json:"type"`                             // экскаватор, бульдозер, грузовик...
+	LicensePlate  string     `gorm:"uniqueIndex" json:"license_plate"` // А123БВ / ИНВ-0042
+	Year          int        `json:"year"`                             // год выпуска
+	PurchasedAt   *time.Time `json:"purchased_at"`                     // дата покупки/добавления
+	WarrantyUntil *time.Time `json:"warranty_until"`                   // гарантия до
+	UnderWarranty bool       `json:"under_warranty"`                   // на гарантии (авто или вручную)
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at"`
+}

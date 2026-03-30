@@ -31,7 +31,7 @@ O = Warehouse
 CN = localhost
 
 [v3_req]
-subjectAltName = DNS:localhost,DNS:127.0.0.1,IP:127.0.0.1,DNS:192.168.0.101,IP:192.168.0.101
+subjectAltName = DNS:localhost,DNS:127.0.0.1,IP:127.0.0.1,DNS:192.168.0.107,IP:192.168.0.107
 EOF
     
     # Generate key
@@ -44,7 +44,7 @@ EOF
     echo "Certificate generated successfully!"
     echo "Certificate: $CERT_FILE"
     echo "Key: $KEY_FILE"
-    echo "SAN: localhost, 127.0.0.1, 192.168.0.101"
+    echo "SAN: localhost, 127.0.0.1, 192.168.0.107"
 else
     echo "Using existing certificate"
 fi

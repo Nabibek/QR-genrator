@@ -6,432 +6,237 @@
     <title>Warehouse — Механик</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #f0f2f5;
-            color: #1a1a2e;
-            min-height: 100vh;
-        }
-
-        /* ── AUTH ── */
-        .auth-overlay {
-            position: fixed; inset: 0;
-            background: linear-gradient(135deg, #0f3460 0%, #16213e 50%, #1a1a2e 100%);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 1000;
-        }
-        .auth-card {
-            background: white; border-radius: 16px;
-            padding: 40px; width: 360px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+        .auth-overlay { position: fixed; inset: 0; background: linear-gradient(135deg, #0f3460 0%, #16213e 50%, #1a1a2e 100%); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .auth-card { background: white; border-radius: 16px; padding: 40px; width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
         .auth-card h2 { font-size: 22px; margin-bottom: 6px; }
         .auth-card p  { color: #666; font-size: 14px; margin-bottom: 24px; }
-
-        /* ── LAYOUT ── */
-        .sidebar {
-            position: fixed; left: 0; top: 0; bottom: 0; width: 220px;
-            background: #1a1a2e; padding: 24px 0;
-            display: flex; flex-direction: column;
-        }
-        .sidebar-logo {
-            padding: 0 20px 24px;
-            font-size: 16px; font-weight: 700; color: white;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
+        .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 220px; background: #1a1a2e; padding: 24px 0; display: flex; flex-direction: column; }
+        .sidebar-logo { padding: 0 20px 24px; font-size: 16px; font-weight: 700; color: white; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .sidebar-logo span { color: #3b82f6; }
-        .nav-item {
-            padding: 12px 20px; color: rgba(255,255,255,0.6);
-            cursor: pointer; display: flex; align-items: center; gap: 10px;
-            font-size: 14px; transition: all 0.2s;
-            border-left: 3px solid transparent;
-        }
+        .nav-item { padding: 12px 20px; color: rgba(255,255,255,0.6); cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; transition: all 0.2s; border-left: 3px solid transparent; }
         .nav-item:hover { color: white; background: rgba(255,255,255,0.05); }
         .nav-item.active { color: white; background: rgba(59,130,246,0.15); border-left-color: #3b82f6; }
         .nav-item .icon { font-size: 18px; width: 24px; text-align: center; }
-        .sidebar-user {
-            margin-top: auto; padding: 16px 20px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.5); font-size: 13px;
-        }
-
+        .sidebar-user { margin-top: auto; padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); font-size: 13px; }
         .main { margin-left: 220px; padding: 32px; }
         .page { display: none; }
         .page.active { display: block; }
-
-        /* ── CARDS ── */
-        .page-header {
-            display: flex; align-items: flex-start; justify-content: space-between;
-            margin-bottom: 24px;
-        }
-        .page-title   { font-size: 24px; font-weight: 700; }
-        .page-subtitle{ color: #666; font-size: 14px; margin-top: 4px; }
-
-        .card {
-            background: white; border-radius: 12px; padding: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px;
-        }
-        .card-title {
-            font-size: 16px; font-weight: 600; margin-bottom: 20px;
-            padding-bottom: 12px; border-bottom: 1px solid #f0f0f0;
-            display: flex; align-items: center; gap: 8px;
-        }
-
-        /* ── FORM ── */
+        .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+        .page-title { font-size: 24px; font-weight: 700; }
+        .page-subtitle { color: #666; font-size: 14px; margin-top: 4px; }
+        .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px; }
+        .card-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 8px; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .form-group { display: flex; flex-direction: column; gap: 6px; }
         .form-group.full { grid-column: 1 / -1; }
         .form-group label { font-size: 13px; font-weight: 500; color: #555; }
-        .form-control {
-            padding: 10px 14px; border: 1.5px solid #e0e0e0;
-            border-radius: 8px; font-size: 14px; outline: none;
-            transition: border-color 0.2s; width: 100%;
-        }
+        .form-control { padding: 10px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s; width: 100%; }
         .form-control:focus { border-color: #3b82f6; }
         select.form-control { background: white; cursor: pointer; }
         textarea.form-control { resize: vertical; min-height: 72px; }
 
-        /* ── URGENCY TOGGLE ── */
-        .urgency-toggle { display: flex; gap: 10px; }
-        .urgency-btn {
-            flex: 1; padding: 10px; border: 2px solid #e0e0e0;
-            border-radius: 8px; background: white; cursor: pointer;
-            font-size: 14px; font-weight: 500; text-align: center;
-            transition: all 0.2s;
-        }
-        .urgency-btn.normal.active  { border-color: #10b981; background: #f0fdf4; color: #10b981; }
-        .urgency-btn.urgent.active  { border-color: #ef4444; background: #fef2f2; color: #ef4444; }
-
-        /* ── ITEMS LIST IN FORM ── */
-        .items-section { margin-top: 0; }
-        .items-header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 14px;
-        }
-        .items-title { font-size: 15px; font-weight: 600; }
-
-        .item-row {
-            background: #f8fafc; border: 1.5px solid #e8ecf0;
-            border-radius: 10px; padding: 14px; margin-bottom: 10px;
-            position: relative;
-        }
-        .item-row-header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 12px;
-        }
-        .item-row-num {
-            font-size: 12px; font-weight: 600; color: #888;
-            text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        .item-row-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }
-        .item-row-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-
-        .search-dropdown {
-            position: relative;
-        }
-        .search-results {
-            position: absolute; top: 100%; left: 0; right: 0;
-            background: white; border: 1.5px solid #e0e0e0;
-            border-top: none; border-radius: 0 0 8px 8px;
-            max-height: 180px; overflow-y: auto;
-            z-index: 100; display: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
+        /* EQUIPMENT SELECTOR */
+        .search-dropdown { position: relative; }
+        .search-results { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1.5px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px; max-height: 220px; overflow-y: auto; z-index: 200; display: none; box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
         .search-results.show { display: block; }
-        .search-result-item {
-            padding: 10px 14px; cursor: pointer; font-size: 13px;
-            transition: background 0.15s;
-            border-bottom: 1px solid #f5f5f5;
-        }
+        .search-result-item { padding: 10px 14px; cursor: pointer; font-size: 13px; transition: background 0.15s; border-bottom: 1px solid #f5f5f5; }
+        .search-result-item:last-child { border-bottom: none; }
         .search-result-item:hover { background: #f0f7ff; }
-        .search-result-item .res-name  { font-weight: 500; }
-        .search-result-item .res-meta  { color: #888; font-size: 12px; margin-top: 2px; }
-        .search-result-item.manual     { color: #3b82f6; font-style: italic; }
-        .item-found-badge {
-            display: inline-block; padding: 2px 8px;
-            background: #f0fdf4; color: #16a34a;
-            border-radius: 20px; font-size: 11px; font-weight: 500;
-        }
-        .item-notfound-badge {
-            display: inline-block; padding: 2px 8px;
-            background: #fff7ed; color: #ea580c;
-            border-radius: 20px; font-size: 11px; font-weight: 500;
-        }
+        .res-name { font-weight: 600; }
+        .res-meta { color: #888; font-size: 12px; margin-top: 2px; }
+        .search-result-item.manual { color: #3b82f6; font-style: italic; }
 
-        /* Фото детали */
-        .photo-mini {
-            border: 2px dashed #e0e0e0; border-radius: 8px;
-            padding: 10px; text-align: center; cursor: pointer;
-            font-size: 12px; color: #888; position: relative;
-            transition: all 0.2s; min-height: 44px;
-            display: flex; align-items: center; justify-content: center; gap: 6px;
-        }
+        .eq-selected-card { background: #f0f7ff; border: 2px solid #3b82f6; border-radius: 10px; padding: 14px 16px; display: none; margin-top: 8px; position: relative; }
+        .eq-selected-card.show { display: block; }
+        .eq-selected-name { font-weight: 700; font-size: 15px; }
+        .eq-selected-meta { font-size: 13px; color: #555; margin-top: 4px; }
+        .eq-selected-clear { position: absolute; top: 10px; right: 12px; background: none; border: none; font-size: 18px; cursor: pointer; color: #888; line-height: 1; }
+        .eq-selected-clear:hover { color: #e94560; }
+        .warranty-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-top: 6px; }
+        .warranty-ok { background: #f0fdf4; color: #16a34a; }
+        .warranty-no { background: #fef2f2; color: #dc2626; }
+
+        /* PLATE SELECTION */
+        .plate-section { margin-top: 14px; padding: 14px 16px; background: #fffbeb; border: 1.5px solid #fbbf24; border-radius: 10px; display: none; }
+        .plate-section-label { font-size: 13px; font-weight: 600; color: #92400e; margin-bottom: 10px; }
+        .plate-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .plate-btn { padding: 8px 18px; border: 2px solid #e0e0e0; border-radius: 8px; background: white; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px; }
+        .plate-btn:hover  { border-color: #3b82f6; color: #3b82f6; background: #f0f7ff; }
+        .plate-btn.active { border-color: #3b82f6; background: #3b82f6; color: white; }
+
+        /* URGENCY */
+        .urgency-toggle { display: flex; gap: 10px; }
+        .urgency-btn { flex: 1; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; background: white; cursor: pointer; font-size: 14px; font-weight: 500; text-align: center; transition: all 0.2s; }
+        .urgency-btn.normal.active { border-color: #10b981; background: #f0fdf4; color: #10b981; }
+        .urgency-btn.urgent.active { border-color: #ef4444; background: #fef2f2; color: #ef4444; }
+
+        /* ITEMS */
+        .item-row { background: #f8fafc; border: 1.5px solid #e8ecf0; border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+        .item-row-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .item-row-num { font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+        .item-row-grid  { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }
+        .item-row-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .photo-mini { border: 2px dashed #e0e0e0; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; font-size: 12px; color: #888; position: relative; transition: all 0.2s; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .photo-mini:hover { border-color: #3b82f6; color: #3b82f6; }
         .photo-mini input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-        .photo-mini img   { max-height: 50px; border-radius: 4px; }
 
-        /* ── BUTTONS ── */
-        .btn {
-            padding: 10px 20px; border: none; border-radius: 8px;
-            font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;
-        }
-        .btn-primary   { background: #3b82f6; color: white; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #3b82f6; color: white; }
         .btn-primary:hover { background: #2563eb; }
         .btn-secondary { background: #f0f2f5; color: #333; }
         .btn-secondary:hover { background: #e0e2e5; }
-        .btn-danger    { background: #fef2f2; color: #dc2626; }
-        .btn-danger:hover { background: #fee2e2; }
-        .btn-ghost  { background: none; border: 1.5px solid #e0e0e0; color: #666; }
-        .btn-ghost:hover { border-color: #3b82f6; color: #3b82f6; }
+        .btn-danger { background: #fef2f2; color: #dc2626; }
         .btn-sm { padding: 6px 12px; font-size: 12px; }
-        .btn-add-item {
-            width: 100%; padding: 12px; border: 2px dashed #c7d2fe;
-            border-radius: 10px; background: #f5f7ff; color: #3b82f6;
-            font-size: 14px; font-weight: 500; cursor: pointer;
-            transition: all 0.2s; margin-top: 4px;
-        }
+        .btn-add-item { width: 100%; padding: 12px; border: 2px dashed #c7d2fe; border-radius: 10px; background: #f5f7ff; color: #3b82f6; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; margin-top: 4px; }
         .btn-add-item:hover { border-color: #3b82f6; background: #eef2ff; }
+        .form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; padding-top: 20px; border-top: 1px solid #f0f0f0; }
 
-        .form-actions {
-            display: flex; gap: 12px; justify-content: flex-end;
-            margin-top: 20px; padding-top: 20px;
-            border-top: 1px solid #f0f0f0;
-        }
+        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+        .badge-blue   { background: #eff6ff; color: #3b82f6; }
+        .badge-green  { background: #f0fdf4; color: #16a34a; }
+        .badge-red    { background: #fef2f2; color: #dc2626; }
+        .badge-orange { background: #fff7ed; color: #ea580c; }
+        .badge-purple { background: #f5f3ff; color: #7c3aed; }
+        .badge-gray   { background: #f3f4f6; color: #6b7280; }
 
-        /* ── ORDERS LIST ── */
-        .orders-grid { display: flex; flex-direction: column; gap: 14px; }
-        .order-card {
-            background: white; border-radius: 12px; padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            border-left: 4px solid #e0e0e0;
-            cursor: pointer; transition: all 0.2s;
-        }
+        .order-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid #e0e0e0; cursor: pointer; transition: all 0.2s; margin-bottom: 14px; }
         .order-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); transform: translateY(-1px); }
-        .order-card.urgent   { border-left-color: #ef4444; }
-        .order-card.normal   { border-left-color: #3b82f6; }
-        .order-card.ready    { border-left-color: #10b981; }
-        .order-card.issued   { border-left-color: #8b5cf6; }
-
-        .order-header {
-            display: flex; align-items: flex-start; justify-content: space-between;
-            margin-bottom: 10px;
-        }
+        .order-card.urgent { border-left-color: #ef4444; }
+        .order-card.normal { border-left-color: #3b82f6; }
+        .order-card.ready  { border-left-color: #10b981; }
+        .order-card.issued { border-left-color: #8b5cf6; }
+        .order-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
         .order-id    { font-size: 12px; color: #888; font-weight: 600; letter-spacing: 0.5px; }
         .order-title { font-size: 16px; font-weight: 600; margin-top: 2px; }
         .order-meta  { font-size: 13px; color: #666; margin-top: 4px; }
+        .order-footer { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f5f5f5; }
 
-        .order-footer {
-            display: flex; align-items: center; gap: 10px;
-            margin-top: 12px; padding-top: 12px;
-            border-top: 1px solid #f5f5f5;
-        }
-        .order-items-count { font-size: 13px; color: #888; }
-
-        /* ── BADGES ── */
-        .badge {
-            display: inline-flex; align-items: center; gap: 4px;
-            padding: 4px 10px; border-radius: 20px;
-            font-size: 12px; font-weight: 500; white-space: nowrap;
-        }
-        .badge-blue    { background: #eff6ff; color: #3b82f6; }
-        .badge-green   { background: #f0fdf4; color: #16a34a; }
-        .badge-red     { background: #fef2f2; color: #dc2626; }
-        .badge-orange  { background: #fff7ed; color: #ea580c; }
-        .badge-purple  { background: #f5f3ff; color: #7c3aed; }
-        .badge-gray    { background: #f3f4f6; color: #6b7280; }
-
-        /* ── DETAIL VIEW ── */
-        .detail-header {
-            display: flex; align-items: center; gap: 12px; margin-bottom: 24px;
-        }
-        .back-btn {
-            padding: 8px 14px; background: #f0f2f5; border: none;
-            border-radius: 8px; cursor: pointer; font-size: 14px;
-            display: flex; align-items: center; gap: 6px;
-        }
+        .detail-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .back-btn { padding: 8px 14px; background: #f0f2f5; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
         .back-btn:hover { background: #e0e2e5; }
-
-        .info-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
-            margin-bottom: 20px;
-        }
-        .info-block {
-            background: #f8fafc; border-radius: 8px; padding: 14px;
-        }
+        .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+        .info-block { background: #f8fafc; border-radius: 8px; padding: 14px; }
         .info-label { font-size: 12px; color: #888; margin-bottom: 4px; }
         .info-value { font-size: 15px; font-weight: 600; }
-
         .detail-items table { width: 100%; border-collapse: collapse; }
-        .detail-items th {
-            text-align: left; padding: 10px 14px;
-            font-size: 12px; color: #888; font-weight: 600;
-            text-transform: uppercase; letter-spacing: 0.5px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-        .detail-items td {
-            padding: 12px 14px; font-size: 14px;
-            border-bottom: 1px solid #f7f7f7; vertical-align: middle;
-        }
+        .detail-items th { text-align: left; padding: 10px 14px; font-size: 12px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #f0f0f0; }
+        .detail-items td { padding: 12px 14px; font-size: 14px; border-bottom: 1px solid #f7f7f7; vertical-align: middle; }
 
-        /* ── ALERT ── */
-        .alert {
-            padding: 12px 16px; border-radius: 8px;
-            font-size: 14px; margin-bottom: 16px; display: none;
-        }
+        .alert { padding: 12px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; display: none; }
         .alert.show { display: block; }
         .alert-error   { background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
         .alert-success { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
-        .alert-info    { background: #eff6ff; color: #3b82f6; border: 1px solid #dbeafe; }
-
-        .empty-state {
-            text-align: center; padding: 56px 20px; color: #aaa;
-        }
+        .empty-state { text-align: center; padding: 56px 20px; color: #aaa; }
         .empty-state .icon { font-size: 52px; margin-bottom: 14px; }
-        .empty-state p { font-size: 15px; }
 
-        /* ── STATUS TIMELINE ── */
-        .timeline {
-            display: flex; align-items: center; gap: 0;
-            margin: 16px 0; overflow-x: auto; padding-bottom: 4px;
-        }
-        .tl-step {
-            display: flex; flex-direction: column; align-items: center;
-            min-width: 90px;
-        }
-        .tl-dot {
-            width: 28px; height: 28px; border-radius: 50%;
-            background: #e0e0e0; display: flex; align-items: center;
-            justify-content: center; font-size: 13px; position: relative; z-index: 1;
-        }
+        .timeline { display: flex; align-items: center; margin: 16px 0; overflow-x: auto; padding-bottom: 4px; }
+        .tl-step { display: flex; flex-direction: column; align-items: center; min-width: 90px; }
+        .tl-dot { width: 28px; height: 28px; border-radius: 50%; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 13px; z-index: 1; }
         .tl-dot.done   { background: #10b981; color: white; }
         .tl-dot.active { background: #3b82f6; color: white; box-shadow: 0 0 0 4px #dbeafe; }
         .tl-label { font-size: 11px; color: #888; margin-top: 6px; text-align: center; }
-        .tl-line {
-            flex: 1; height: 2px; background: #e0e0e0; min-width: 20px; margin-top: -14px;
-        }
+        .tl-line { flex: 1; height: 2px; background: #e0e0e0; min-width: 20px; margin-top: -14px; }
         .tl-line.done { background: #10b981; }
     </style>
 </head>
 <body>
 
-<!-- ══════════════════ AUTH ══ -->
 <div class="auth-overlay" id="authOverlay">
     <div class="auth-card">
         <h2>🔧 Кабинет механика</h2>
         <p>Создание заявок на получение деталей</p>
-        <div class="form-group" style="margin-bottom:12px">
-            <label>Логин</label>
-            <input type="text" id="authUsername" class="form-control" placeholder="operator1">
-        </div>
-        <div class="form-group" style="margin-bottom:20px">
-            <label>Пароль</label>
-            <input type="password" id="authPassword" class="form-control" placeholder="••••••••">
-        </div>
+        <div class="form-group" style="margin-bottom:12px"><label>Логин</label><input type="text" id="authUsername" class="form-control" placeholder="operator1"></div>
+        <div class="form-group" style="margin-bottom:20px"><label>Пароль</label><input type="password" id="authPassword" class="form-control" placeholder="••••••••"></div>
         <div id="authAlert" class="alert alert-error"></div>
         <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Войти</button>
     </div>
 </div>
 
-<!-- ══════════════════ SIDEBAR ══ -->
 <div class="sidebar" id="sidebar" style="display:none">
     <div class="sidebar-logo">🔧 Механик <span>Portal</span></div>
-    <div class="nav-item active" onclick="showPage('orders')" id="nav-orders">
-        <span class="icon">📋</span> Мои заявки
-    </div>
-    <div class="nav-item" onclick="showPage('create')" id="nav-create">
-        <span class="icon">➕</span> Новая заявка
-    </div>
-    <div class="sidebar-user">
-        👤 <span id="sidebarUser"></span><br>
-        <a href="#" onclick="doLogout()" style="color:#3b82f6;font-size:12px">Выход</a>
-    </div>
+    <div class="nav-item active" onclick="showPage('orders')" id="nav-orders"><span class="icon">📋</span> Мои заявки</div>
+    <div class="nav-item" onclick="showPage('create')" id="nav-create"><span class="icon">➕</span> Новая заявка</div>
+    <div class="sidebar-user">👤 <span id="sidebarUser"></span><br><a href="#" onclick="doLogout()" style="color:#3b82f6;font-size:12px">Выход</a></div>
 </div>
 
-<!-- ══════════════════ MAIN ══ -->
 <div class="main" id="mainContent" style="display:none">
 
-    <!-- ── МОИ ЗАЯВКИ ── -->
+    <!-- МОИ ЗАЯВКИ -->
     <div class="page active" id="page-orders">
         <div class="page-header">
-            <div>
-                <div class="page-title">Мои заявки</div>
-                <div class="page-subtitle">История и статус заявок на детали</div>
-            </div>
+            <div><div class="page-title">Мои заявки</div><div class="page-subtitle">История и статус заявок на детали</div></div>
             <button class="btn btn-primary" onclick="showPage('create')">➕ Новая заявка</button>
         </div>
-
-        <!-- Фильтры статуса -->
         <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
-            <button class="btn btn-sm badge badge-gray" style="cursor:pointer" onclick="filterOrders('')" id="filter-all">Все</button>
-            <button class="btn btn-sm" onclick="filterOrders('pending')"   id="filter-pending">⏳ Ожидает</button>
-            <button class="btn btn-sm" onclick="filterOrders('collecting')" id="filter-collecting">📦 Собирают</button>
-            <button class="btn btn-sm" onclick="filterOrders('ready')"     id="filter-ready">✅ Готово</button>
-            <button class="btn btn-sm" onclick="filterOrders('issued')"    id="filter-issued">🤝 Выдано</button>
+            <button class="btn btn-sm badge badge-gray" style="cursor:pointer" onclick="filterOrders('')">Все</button>
+            <button class="btn btn-sm" onclick="filterOrders('pending')">⏳ Ожидает</button>
+            <button class="btn btn-sm" onclick="filterOrders('collecting')">📦 Собирают</button>
+            <button class="btn btn-sm" onclick="filterOrders('ready')">✅ Готово</button>
+            <button class="btn btn-sm" onclick="filterOrders('issued')">🤝 Выдано</button>
         </div>
-
-        <div id="ordersList">
-            <div class="empty-state"><div class="icon">📋</div><p>Загрузка...</p></div>
-        </div>
+        <div id="ordersList"><div class="empty-state"><div class="icon">📋</div><p>Загрузка...</p></div></div>
     </div>
 
-    <!-- ── ДЕТАЛИ ЗАЯВКИ ── -->
+    <!-- ДЕТАЛИ ЗАЯВКИ -->
     <div class="page" id="page-detail">
         <div class="detail-header">
             <button class="back-btn" onclick="showPage('orders')">← Назад</button>
-            <div>
-                <div class="page-title" id="detailTitle">Заявка</div>
-                <div class="page-subtitle" id="detailSubtitle"></div>
-            </div>
+            <div><div class="page-title" id="detailTitle">Заявка</div><div class="page-subtitle" id="detailSubtitle"></div></div>
             <div id="detailBadge"></div>
         </div>
-
-        <!-- Статус таймлайн -->
-        <div class="card" style="padding:20px">
-            <div class="timeline" id="detailTimeline"></div>
-        </div>
-
-        <!-- Инфо -->
+        <div class="card" style="padding:20px"><div class="timeline" id="detailTimeline"></div></div>
         <div class="info-grid" id="detailInfo"></div>
-
-        <!-- Список деталей -->
         <div class="card">
             <div class="card-title">📦 Детали заявки</div>
             <div class="detail-items">
-                <table>
-                    <thead><tr>
-                        <th>#</th><th>Наименование</th><th>Артикул</th>
-                        <th>Кол-во</th><th>Ед.</th><th>Обоснование</th><th>Фото</th>
-                    </tr></thead>
-                    <tbody id="detailItemsTable"></tbody>
-                </table>
+                <table><thead><tr><th>#</th><th>Наименование</th><th>Артикул</th><th>Кол-во</th><th>Ед.</th><th>Обоснование</th><th>Фото</th></tr></thead>
+                <tbody id="detailItemsTable"></tbody></table>
             </div>
         </div>
     </div>
 
-    <!-- ── СОЗДАТЬ ЗАЯВКУ ── -->
+    <!-- СОЗДАТЬ ЗАЯВКУ -->
     <div class="page" id="page-create">
         <div class="page-header">
-            <div>
-                <div class="page-title">Новая заявка</div>
-                <div class="page-subtitle">Заполните данные для получения деталей со склада</div>
-            </div>
+            <div><div class="page-title">Новая заявка</div><div class="page-subtitle">Заполните данные для получения деталей со склада</div></div>
         </div>
-
         <div id="createAlert" class="alert"></div>
 
-        <!-- Блок 1: Техника -->
         <div class="card">
             <div class="card-title">🚛 Техника и вид работ</div>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Название техники / оборудования *</label>
-                    <input type="text" id="woEquipment" class="form-control" placeholder="Экскаватор Komatsu PC200">
+
+            <!-- Поиск техники -->
+            <div class="form-group" style="margin-bottom:6px">
+                <label>Поиск техники * <span style="color:#888;font-weight:400;font-size:12px">(название, тип или гос. номер)</span></label>
+                <div class="search-dropdown">
+                    <input type="text" id="eqSearch" class="form-control"
+                        placeholder="Экскаватор, Komatsu, А123БВ..."
+                        oninput="searchEquipment(this.value)"
+                        onblur="hideEqResults()"
+                        autocomplete="off">
+                    <div class="search-results" id="eqResults"></div>
                 </div>
-                <div class="form-group">
-                    <label>Гос. номер / инв. номер *</label>
-                    <input type="text" id="woEquipmentNum" class="form-control" placeholder="А123БВ / ИНВ-0042">
+                <!-- Карточка выбранной техники -->
+                <div class="eq-selected-card" id="eqSelectedCard">
+                    <button class="eq-selected-clear" onclick="clearEquipment()">✕</button>
+                    <div class="eq-selected-name" id="eqSelectedName"></div>
+                    <div class="eq-selected-meta" id="eqSelectedMeta"></div>
+                    <div id="eqSelectedWarranty"></div>
                 </div>
+            </div>
+
+            <!-- Выбор гос. номера (если несколько машин одной модели) -->
+            <div class="plate-section" id="plateSection">
+                <div class="plate-section-label">⚠️ У этой модели несколько машин — выберите гос. номер:</div>
+                <div class="plate-list" id="plateList"></div>
+            </div>
+
+            <input type="hidden" id="woEquipmentId">
+            <input type="hidden" id="woEquipment">
+            <input type="hidden" id="woEquipmentNum">
+
+            <div class="form-grid" style="margin-top:16px">
                 <div class="form-group">
                     <label>Тип работы *</label>
                     <select id="woWorkType" class="form-control">
@@ -446,36 +251,21 @@
                 <div class="form-group">
                     <label>Срочность</label>
                     <div class="urgency-toggle">
-                        <button class="urgency-btn normal active" id="urgNormal" onclick="setUrgency('normal')">
-                            🟢 Обычная
-                        </button>
-                        <button class="urgency-btn urgent" id="urgUrgent" onclick="setUrgency('urgent')">
-                            🔴 Срочная
-                        </button>
+                        <button class="urgency-btn normal active" id="urgNormal" onclick="setUrgency('normal')">🟢 Обычная</button>
+                        <button class="urgency-btn urgent" id="urgUrgent" onclick="setUrgency('urgent')">🔴 Срочная</button>
                     </div>
                 </div>
                 <div class="form-group full">
                     <label>Описание проблемы / комментарий</label>
-                    <textarea id="woDescription" class="form-control"
-                        placeholder="Опишите неисправность или что необходимо сделать..."></textarea>
+                    <textarea id="woDescription" class="form-control" placeholder="Опишите неисправность или что необходимо сделать..."></textarea>
                 </div>
             </div>
         </div>
 
-        <!-- Блок 2: Детали -->
         <div class="card">
-            <div class="card-title">
-                📦 Необходимые детали
-                <span style="font-size:12px;color:#888;font-weight:400;margin-left:8px">
-                    Минимум 1 позиция
-                </span>
-            </div>
-
+            <div class="card-title">📦 Необходимые детали <span style="font-size:12px;color:#888;font-weight:400;margin-left:8px">Минимум 1 позиция</span></div>
             <div id="woItemsList"></div>
-
-            <button class="btn-add-item" onclick="addItemRow()">
-                + Добавить деталь
-            </button>
+            <button class="btn-add-item" onclick="addItemRow()">+ Добавить деталь</button>
         </div>
 
         <div class="form-actions">
@@ -484,498 +274,306 @@
         </div>
     </div>
 
-</div><!-- /main -->
+</div>
 
 <script>
-const API = '/api';
-let token = null;
-let currentUser = null;
-let currentUserId = null;
-let urgency = 'normal';
-let itemRowCount = 0;
-let allOrders = [];
-let catalogItems = [];
+const API='/api';
+let token=null,currentUser=null,currentUserId=null;
+let urgency='normal',itemRowCount=0;
+let allOrders=[],catalogItems=[],allEquipment=[];
+let selectedEquipmentId=null;
 
-// ═══════════════════════════════════════════════════════ AUTH ══
-async function doLogin() {
-    const username = document.getElementById('authUsername').value.trim();
-    const password = document.getElementById('authPassword').value;
-    const alertEl  = document.getElementById('authAlert');
+async function doLogin(){
+    const u=document.getElementById('authUsername').value.trim(),p=document.getElementById('authPassword').value,a=document.getElementById('authAlert');
+    if(!u||!p){showAlert(a,'Введите логин и пароль','error');return;}
+    try{
+        const res=await fetch(`${API}/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+        const d=await res.json();
+        if(d.success){
+            token=d.token;currentUser=d.username;currentUserId=d.user_id;
+            document.getElementById('authOverlay').style.display='none';
+            document.getElementById('sidebar').style.display='flex';
+            document.getElementById('mainContent').style.display='block';
+            document.getElementById('sidebarUser').textContent=currentUser;
+            loadCatalog();loadEquipment();loadOrders();
+        }else{showAlert(a,d.error||'Неверный логин или пароль','error');}
+    }catch(e){showAlert(a,'Ошибка подключения','error');}
+}
+function doLogout(){token=null;document.getElementById('sidebar').style.display='none';document.getElementById('mainContent').style.display='none';document.getElementById('authOverlay').style.display='flex';}
 
-    if (!username || !password) {
-        showAlert(alertEl, 'Введите логин и пароль', 'error'); return;
+function showPage(n){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+    document.getElementById('page-'+n).classList.add('active');
+    document.getElementById('nav-'+n)?.classList.add('active');
+    if(n==='orders')loadOrders();
+    if(n==='create'&&itemRowCount===0)addItemRow();
+}
+
+async function loadCatalog(){try{const r=await fetch(`${API}/admin/items`),d=await r.json();catalogItems=d.items||[];}catch(e){}}
+async function loadEquipment(){try{const r=await fetch(`${API}/admin/equipment`),d=await r.json();allEquipment=d.equipment||[];}catch(e){}}
+
+// ══ EQUIPMENT SEARCH ══
+function searchEquipment(val){
+    const res=document.getElementById('eqResults');
+    if(val.length<1){res.classList.remove('show');return;}
+    const q=val.toLowerCase();
+    const matches=allEquipment.filter(e=>
+        e.name.toLowerCase().includes(q)||
+        (e.type&&e.type.toLowerCase().includes(q))||
+        e.license_plate.toLowerCase().includes(q)
+    ).slice(0,10);
+
+    if(!matches.length){
+        res.innerHTML='<div class="search-result-item" style="color:#aaa;cursor:default;font-style:italic">Техника не найдена</div>';
+        res.classList.add('show');return;
     }
 
-    try {
-        const res  = await fetch(`${API}/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-
-        if (data.success) {
-            token = data.token;
-            currentUser   = data.username;
-            currentUserId = data.user_id;
-            document.getElementById('authOverlay').style.display = 'none';
-            document.getElementById('sidebar').style.display     = 'flex';
-            document.getElementById('mainContent').style.display = 'block';
-            document.getElementById('sidebarUser').textContent   = currentUser;
-            loadCatalog();
-            loadOrders();
-        } else {
-            showAlert(alertEl, data.error || 'Неверный логин или пароль', 'error');
-        }
-    } catch(e) {
-        showAlert(alertEl, 'Ошибка подключения', 'error');
-    }
-}
-
-function doLogout() {
-    token = null;
-    document.getElementById('sidebar').style.display     = 'none';
-    document.getElementById('mainContent').style.display = 'none';
-    document.getElementById('authOverlay').style.display = 'flex';
-}
-
-// ════════════════════════════════════════════════════════ NAV ══
-function showPage(name) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('page-' + name).classList.add('active');
-    const nav = document.getElementById('nav-' + name);
-    if (nav) nav.classList.add('active');
-
-    if (name === 'orders') loadOrders();
-    if (name === 'create' && itemRowCount === 0) addItemRow();
-}
-
-// ══════════════════════════════════════════════════ CATALOGUE ══
-async function loadCatalog() {
-    try {
-        const res  = await fetch(`${API}/admin/items`);
-        const data = await res.json();
-        catalogItems = data.items || [];
-    } catch(e) {}
-}
-
-// ════════════════════════════════════════════════════ ORDERS ══
-async function loadOrders() {
-    try {
-        const res  = await fetch(`${API}/mechanic/orders`, {
-            headers: { 'Authorization': token }
-        });
-        const data = await res.json();
-
-        // Если API ещё не реализован — показываем заглушку
-        if (!data.success) {
-            renderOrders([]);
-            return;
-        }
-        allOrders = data.orders || [];
-        renderOrders(allOrders);
-    } catch(e) {
-        renderOrders([]);
-    }
-}
-
-function filterOrders(status) {
-    const filtered = status ? allOrders.filter(o => o.status === status) : allOrders;
-    renderOrders(filtered);
-}
-
-function renderOrders(orders) {
-    const container = document.getElementById('ordersList');
-    if (!orders.length) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <div class="icon">📋</div>
-                <p>Заявок пока нет</p>
-                <br>
-                <button class="btn btn-primary" onclick="showPage('create')">➕ Создать первую заявку</button>
-            </div>`;
-        return;
-    }
-
-    container.innerHTML = `<div class="orders-grid">${orders.map(o => orderCardHTML(o)).join('')}</div>`;
-}
-
-function orderCardHTML(o) {
-    const statusMap = {
-        draft:      { label: 'Черновик',  badge: 'badge-gray',   cls: '' },
-        pending:    { label: 'Ожидает',   badge: 'badge-blue',   cls: 'normal' },
-        collecting: { label: 'Собирают',  badge: 'badge-orange', cls: 'normal' },
-        ready:      { label: 'Готово',    badge: 'badge-green',  cls: 'ready' },
-        issued:     { label: 'Выдано',    badge: 'badge-purple', cls: 'issued' },
-    };
-    const s = statusMap[o.status] || statusMap.pending;
-    const urgClass = o.priority === 'urgent' ? 'urgent' : s.cls;
-
-    return `
-    <div class="order-card ${urgClass}" onclick="openOrder('${o.id}')">
-        <div class="order-header">
-            <div>
-                <div class="order-id">${o.id}</div>
-                <div class="order-title">${o.equipment} — ${o.work_type}</div>
-                <div class="order-meta">№ ${o.equipment_number} · ${formatDate(o.created_at)}</div>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-                <span class="badge ${s.badge}">${s.label}</span>
-                ${o.priority === 'urgent' ? '<span class="badge badge-red">🔴 Срочно</span>' : ''}
-            </div>
-        </div>
-        <div class="order-footer">
-            <span class="order-items-count">📦 ${o.items_count || 0} позиций</span>
-            ${o.status === 'ready' ? '<span class="badge badge-green">✅ Можно забрать!</span>' : ''}
-        </div>
-    </div>`;
-}
-
-function openOrder(id) {
-    const o = allOrders.find(x => x.id === id);
-    if (!o) return;
-
-    document.getElementById('detailTitle').textContent    = `${o.equipment} — ${o.work_type}`;
-    document.getElementById('detailSubtitle').textContent = `Заявка ${o.id} · ${formatDate(o.created_at)}`;
-
-    const statusMap = {
-        draft:      'badge-gray',
-        pending:    'badge-blue',
-        collecting: 'badge-orange',
-        ready:      'badge-green',
-        issued:     'badge-purple',
-    };
-    const statusLabel = {
-        draft: 'Черновик', pending: 'Ожидает рассмотрения',
-        collecting: 'Собирается', ready: 'Готово к выдаче', issued: 'Выдано'
-    };
-    document.getElementById('detailBadge').innerHTML =
-        `<span class="badge ${statusMap[o.status] || 'badge-gray'}">${statusLabel[o.status] || o.status}</span>`;
-
-    // Timeline
-    const steps = [
-        { key: 'pending',    label: 'Отправлено',  icon: '📤' },
-        { key: 'collecting', label: 'Сборка',       icon: '📦' },
-        { key: 'ready',      label: 'Готово',       icon: '✅' },
-        { key: 'issued',     label: 'Выдано',       icon: '🤝' },
-    ];
-    const order_idx = steps.findIndex(s => s.key === o.status);
-    let tlHTML = '';
-    steps.forEach((s, i) => {
-        const isDone   = i < order_idx;
-        const isActive = i === order_idx;
-        if (i > 0) tlHTML += `<div class="tl-line ${isDone ? 'done' : ''}"></div>`;
-        tlHTML += `
-            <div class="tl-step">
-                <div class="tl-dot ${isDone ? 'done' : ''} ${isActive ? 'active' : ''}">${isDone ? '✓' : s.icon}</div>
-                <div class="tl-label">${s.label}</div>
-            </div>`;
+    // Группируем по name+type
+    const grouped={};
+    matches.forEach(e=>{
+        const key=e.name+'||'+e.type;
+        if(!grouped[key])grouped[key]=[];
+        grouped[key].push(e);
     });
-    document.getElementById('detailTimeline').innerHTML = tlHTML;
 
-    // Info grid
-    document.getElementById('detailInfo').innerHTML = `
-        <div class="info-block">
-            <div class="info-label">Техника</div>
-            <div class="info-value">${o.equipment}</div>
-        </div>
-        <div class="info-block">
-            <div class="info-label">Гос. / инв. номер</div>
-            <div class="info-value">${o.equipment_number}</div>
-        </div>
-        <div class="info-block">
-            <div class="info-label">Тип работы</div>
-            <div class="info-value">${o.work_type}</div>
-        </div>
-        <div class="info-block">
-            <div class="info-label">Срочность</div>
-            <div class="info-value">${o.priority === 'urgent' ? '🔴 Срочная' : '🟢 Обычная'}</div>
-        </div>
-        <div class="info-block">
-            <div class="info-label">Дата создания</div>
-            <div class="info-value">${formatDate(o.created_at)}</div>
-        </div>
-        <div class="info-block">
-            <div class="info-label">Комментарий</div>
-            <div class="info-value" style="font-size:13px;font-weight:400">${o.description || '—'}</div>
+    res.innerHTML=Object.values(grouped).map(items=>{
+        const f=items[0];
+        const plates=items.map(e=>e.license_plate).join(', ');
+        // Сериализуем для передачи в onclick
+        const json=JSON.stringify(items).replace(/"/g,"'");
+        return `<div class="search-result-item" onmousedown="handleEqSelect(${json})">
+            <div class="res-name">${f.name}</div>
+            <div class="res-meta">${f.type||''}${f.year?' · '+f.year+' г.':''} · 🚘 <strong>${plates}</strong></div>
         </div>`;
+    }).join('');
 
-    // Items table
-    const items = o.items || [];
-    document.getElementById('detailItemsTable').innerHTML = items.length
-        ? items.map((item, i) => `
-            <tr>
-                <td style="color:#888">${i+1}</td>
-                <td><strong>${item.name}</strong></td>
-                <td style="color:#888">${item.part_number || '—'}</td>
-                <td><strong>${item.quantity}</strong></td>
-                <td>${item.unit || 'шт'}</td>
-                <td style="font-size:13px;color:#666">${item.justification || '—'}</td>
-                <td>${item.photo_url ? `<img src="${item.photo_url}" style="height:40px;border-radius:4px">` : '—'}</td>
-            </tr>`).join('')
-        : '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:20px">Нет позиций</td></tr>';
+    res.classList.add('show');
+}
 
+function handleEqSelect(items){
+    // items может быть массивом объектов с одинарными кавычками из onclick
+    if(typeof items==='string')items=JSON.parse(items.replace(/'/g,'"'));
+    document.getElementById('eqResults').classList.remove('show');
+    document.getElementById('eqSearch').value=items[0].name;
+
+    if(items.length===1){
+        selectSingleEquipment(items[0]);
+        document.getElementById('plateSection').style.display='none';
+    }else{
+        showPlateSelection(items);
+    }
+}
+
+function selectSingleEquipment(eq){
+    selectedEquipmentId=eq.id;
+    document.getElementById('woEquipmentId').value=eq.id;
+    document.getElementById('woEquipment').value=eq.name;
+    document.getElementById('woEquipmentNum').value=eq.license_plate;
+    renderEqCard(eq);
+}
+
+function showPlateSelection(items){
+    // Показываем карточку модели (без конкретного номера)
+    const f=items[0];
+    document.getElementById('eqSelectedName').textContent=f.name;
+    document.getElementById('eqSelectedMeta').textContent=(f.type||'')+(f.year?' · '+f.year+' г.':'')+' · выберите гос. номер ↓';
+    document.getElementById('eqSelectedWarranty').innerHTML='';
+    document.getElementById('eqSelectedCard').classList.add('show');
+
+    // Кнопки номеров
+    const pl=document.getElementById('plateList');
+    pl.innerHTML=items.map(eq=>{
+        const safe=JSON.stringify(eq).replace(/"/g,"'");
+        return `<button class="plate-btn" onmousedown="selectPlate(this,${safe})" data-id="${eq.id}">${eq.license_plate}</button>`;
+    }).join('');
+
+    document.getElementById('plateSection').style.display='block';
+    // Сбрасываем до выбора номера
+    selectedEquipmentId=null;
+    document.getElementById('woEquipmentId').value='';
+    document.getElementById('woEquipmentNum').value='';
+}
+
+function selectPlate(btn,eq){
+    if(typeof eq==='string')eq=JSON.parse(eq.replace(/'/g,'"'));
+    document.querySelectorAll('.plate-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    selectSingleEquipment(eq);
+}
+
+function renderEqCard(eq){
+    document.getElementById('eqSelectedName').textContent=eq.name+' — '+eq.license_plate;
+    document.getElementById('eqSelectedMeta').textContent=(eq.type||'')+(eq.year?' · '+eq.year+' г.':'')+(eq.purchased_at?' · куплен '+formatDateShort(eq.purchased_at):'');
+    let w='';
+    if(eq.warranty_until){
+        const ok=eq.under_warranty;
+        w=`<span class="warranty-badge ${ok?'warranty-ok':'warranty-no'}">${ok?'✅ На гарантии до':'❌ Гарантия истекла'} ${formatDateShort(eq.warranty_until)}</span>`;
+    }
+    document.getElementById('eqSelectedWarranty').innerHTML=w;
+    document.getElementById('eqSelectedCard').classList.add('show');
+}
+
+function clearEquipment(){
+    selectedEquipmentId=null;
+    document.getElementById('woEquipmentId').value='';
+    document.getElementById('woEquipment').value='';
+    document.getElementById('woEquipmentNum').value='';
+    document.getElementById('eqSearch').value='';
+    document.getElementById('eqSelectedCard').classList.remove('show');
+    document.getElementById('plateSection').style.display='none';
+    document.getElementById('eqSearch').focus();
+}
+function hideEqResults(){setTimeout(()=>document.getElementById('eqResults').classList.remove('show'),200);}
+
+// ══ ORDERS ══
+async function loadOrders(){
+    try{const r=await fetch(`${API}/mechanic/orders`,{headers:{'Authorization':token}}),d=await r.json();allOrders=d.success?d.orders||[]:[];renderOrders(allOrders);}catch(e){renderOrders([]);}
+}
+function filterOrders(s){renderOrders(s?allOrders.filter(o=>o.status===s):allOrders);}
+function renderOrders(orders){
+    const c=document.getElementById('ordersList');
+    if(!orders.length){c.innerHTML='<div class="empty-state"><div class="icon">📋</div><p>Заявок пока нет</p><br><button class="btn btn-primary" onclick="showPage(\'create\')">➕ Создать первую заявку</button></div>';return;}
+    const sM={draft:{l:'Черновик',b:'badge-gray',cl:''},pending:{l:'Ожидает',b:'badge-blue',cl:'normal'},collecting:{l:'Собирают',b:'badge-orange',cl:'normal'},ready:{l:'Готово',b:'badge-green',cl:'ready'},issued:{l:'Выдано',b:'badge-purple',cl:'issued'}};
+    c.innerHTML=orders.map(o=>{const s=sM[o.status]||sM.pending,urg=o.priority==='urgent'?'urgent':s.cl;
+    return `<div class="order-card ${urg}" onclick="openOrder('${o.id}')">
+        <div class="order-header">
+            <div><div class="order-id">${o.id}</div><div class="order-title">${o.equipment} — ${o.work_type}</div><div class="order-meta">№ ${o.equipment_number} · ${formatDate(o.created_at)}</div></div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="badge ${s.b}">${s.l}</span>${o.priority==='urgent'?'<span class="badge badge-red">🔴 Срочно</span>':''}</div>
+        </div>
+        <div class="order-footer"><span style="font-size:13px;color:#888">📦 ${o.items_count||0} позиций</span>${o.status==='ready'?'<span class="badge badge-green">✅ Можно забрать!</span>':''}</div>
+    </div>`;}).join('');
+}
+function openOrder(id){
+    const o=allOrders.find(x=>x.id===id);if(!o)return;
+    document.getElementById('detailTitle').textContent=`${o.equipment} — ${o.work_type}`;
+    document.getElementById('detailSubtitle').textContent=`Заявка ${o.id} · ${formatDate(o.created_at)}`;
+    const sM={draft:'badge-gray',pending:'badge-blue',collecting:'badge-orange',ready:'badge-green',issued:'badge-purple'};
+    const sL={draft:'Черновик',pending:'Ожидает рассмотрения',collecting:'Собирается',ready:'Готово к выдаче',issued:'Выдано'};
+    document.getElementById('detailBadge').innerHTML=`<span class="badge ${sM[o.status]||'badge-gray'}">${sL[o.status]||o.status}</span>`;
+    const steps=[{key:'pending',label:'Отправлено',icon:'📤'},{key:'collecting',label:'Сборка',icon:'📦'},{key:'ready',label:'Готово',icon:'✅'},{key:'issued',label:'Выдано',icon:'🤝'}];
+    const oi=steps.findIndex(s=>s.key===o.status);
+    document.getElementById('detailTimeline').innerHTML=steps.map((s,i)=>
+        (i>0?`<div class="tl-line ${i<=oi?'done':''}"></div>`:'')+
+        `<div class="tl-step"><div class="tl-dot ${i<oi?'done':''} ${i===oi?'active':''}">${i<oi?'✓':s.icon}</div><div class="tl-label">${s.label}</div></div>`
+    ).join('');
+    document.getElementById('detailInfo').innerHTML=`
+        <div class="info-block"><div class="info-label">Техника</div><div class="info-value">${o.equipment}</div></div>
+        <div class="info-block"><div class="info-label">Гос. / инв. номер</div><div class="info-value">${o.equipment_number}</div></div>
+        <div class="info-block"><div class="info-label">Тип работы</div><div class="info-value">${o.work_type}</div></div>
+        <div class="info-block"><div class="info-label">Срочность</div><div class="info-value">${o.priority==='urgent'?'🔴 Срочная':'🟢 Обычная'}</div></div>
+        <div class="info-block"><div class="info-label">Дата создания</div><div class="info-value">${formatDate(o.created_at)}</div></div>
+        <div class="info-block"><div class="info-label">Комментарий</div><div class="info-value" style="font-size:13px;font-weight:400">${o.description||'—'}</div></div>`;
+    const items=o.items||[];
+    document.getElementById('detailItemsTable').innerHTML=items.length
+        ?items.map((it,i)=>`<tr><td style="color:#888">${i+1}</td><td><strong>${it.name}</strong></td><td style="color:#888">${it.part_number||'—'}</td><td><strong>${it.quantity}</strong></td><td>${it.unit||'шт'}</td><td style="font-size:13px;color:#666">${it.justification||'—'}</td><td>${it.photo_url?`<img src="${it.photo_url}" style="height:40px;border-radius:4px">`:'—'}</td></tr>`).join('')
+        :'<tr><td colspan="7" style="text-align:center;color:#aaa;padding:20px">Нет позиций</td></tr>';
     showPage('detail');
 }
 
-// ══════════════════════════════════════════════════ CREATE WO ══
-function setUrgency(val) {
-    urgency = val;
-    document.getElementById('urgNormal').classList.toggle('active', val === 'normal');
-    document.getElementById('urgUrgent').classList.toggle('active', val === 'urgent');
-}
+// ══ CREATE ══
+function setUrgency(v){urgency=v;document.getElementById('urgNormal').classList.toggle('active',v==='normal');document.getElementById('urgUrgent').classList.toggle('active',v==='urgent');}
 
-function addItemRow() {
-    itemRowCount++;
-    const idx = itemRowCount;
-    const div = document.createElement('div');
-    div.className = 'item-row';
-    div.id = `item-row-${idx}`;
-    div.innerHTML = `
+function addItemRow(){
+    itemRowCount++;const idx=itemRowCount;
+    const div=document.createElement('div');div.className='item-row';div.id=`item-row-${idx}`;
+    div.innerHTML=`
         <div class="item-row-header">
             <span class="item-row-num">Позиция ${idx}</span>
-            ${idx > 1 ? `<button class="btn btn-sm btn-danger" onclick="removeItemRow(${idx})">✕ Удалить</button>` : ''}
+            ${idx>1?`<button class="btn btn-sm btn-danger" onclick="removeItemRow(${idx})">✕ Удалить</button>`:''}
         </div>
         <div class="item-row-grid">
-            <!-- Поиск детали -->
-            <div class="form-group">
-                <label>Наименование *</label>
+            <div class="form-group"><label>Наименование *</label>
                 <div class="search-dropdown">
-                    <input type="text" class="form-control" id="iname-${idx}"
-                        placeholder="Введите название или артикул..."
-                        oninput="searchCatalog(${idx}, this.value)"
-                        onblur="hideResults(${idx})"
-                        autocomplete="off">
+                    <input type="text" class="form-control" id="iname-${idx}" placeholder="Введите название или артикул..." oninput="searchCatalog(${idx},this.value)" onblur="hideResults(${idx})" autocomplete="off">
                     <div class="search-results" id="iresults-${idx}"></div>
                 </div>
                 <input type="hidden" id="iitem_id-${idx}">
             </div>
-            <div class="form-group">
-                <label>Каталожный номер / Артикул</label>
-                <input type="text" class="form-control" id="ipart-${idx}" placeholder="PN-2024-001">
-            </div>
-            <div class="form-group">
-                <label>Ед. измерения</label>
-                <select class="form-control" id="iunit-${idx}">
-                    <option value="шт">шт</option>
-                    <option value="кг">кг</option>
-                    <option value="м">м</option>
-                    <option value="л">л</option>
-                    <option value="уп">уп</option>
-                    <option value="компл">компл</option>
-                </select>
+            <div class="form-group"><label>Каталожный номер / Артикул</label><input type="text" class="form-control" id="ipart-${idx}" placeholder="PN-2024-001"></div>
+            <div class="form-group"><label>Ед. измерения</label>
+                <select class="form-control" id="iunit-${idx}"><option value="шт">шт</option><option value="кг">кг</option><option value="м">м</option><option value="л">л</option><option value="уп">уп</option><option value="компл">компл</option></select>
             </div>
         </div>
         <div class="item-row-grid2">
-            <div class="form-group">
-                <label>Количество *</label>
-                <input type="number" class="form-control" id="iqty-${idx}"
-                    placeholder="1" min="1" value="1">
-            </div>
-            <div class="form-group">
-                <label>Обоснование необходимости</label>
-                <input type="text" class="form-control" id="ijust-${idx}"
-                    placeholder="Износ, плановая замена, поломка...">
-            </div>
+            <div class="form-group"><label>Количество *</label><input type="number" class="form-control" id="iqty-${idx}" placeholder="1" min="1" value="1"></div>
+            <div class="form-group"><label>Обоснование необходимости</label><input type="text" class="form-control" id="ijust-${idx}" placeholder="Износ, плановая замена, поломка..."></div>
         </div>
-        <!-- Фото детали -->
         <div style="margin-top:10px">
-            <label style="font-size:13px;font-weight:500;color:#555;display:block;margin-bottom:6px">
-                Фото детали (необязательно)
-            </label>
+            <label style="font-size:13px;font-weight:500;color:#555;display:block;margin-bottom:6px">Фото детали (необязательно)</label>
             <div class="photo-mini" id="iphoto-area-${idx}">
-                <input type="file" accept="image/*" onchange="previewItemPhoto(${idx}, this)">
+                <input type="file" accept="image/*" onchange="previewItemPhoto(${idx},this)">
                 <span>📷 Прикрепить фото</span>
                 <img id="iphoto-preview-${idx}" style="display:none;max-height:60px;border-radius:4px">
             </div>
         </div>`;
-
     document.getElementById('woItemsList').appendChild(div);
 }
+function removeItemRow(idx){document.getElementById(`item-row-${idx}`)?.remove();}
 
-function removeItemRow(idx) {
-    document.getElementById(`item-row-${idx}`)?.remove();
+function searchCatalog(idx,val){
+    const res=document.getElementById(`iresults-${idx}`);
+    document.getElementById(`iitem_id-${idx}`).value='';
+    if(val.length<2){res.classList.remove('show');return;}
+    const q=val.toLowerCase();
+    const matches=catalogItems.filter(i=>i.name.toLowerCase().includes(q)||(i.sku&&i.sku.toLowerCase().includes(q))||(i.part_number&&i.part_number.toLowerCase().includes(q))).slice(0,6);
+    let html=matches.map(i=>`<div class="search-result-item" onmousedown="selectCatalogItem(${idx},'${i.id}','${escQ(i.name)}','${escQ(i.part_number||'')}','${i.unit||'шт'}')"><div class="res-name">${i.name}</div><div class="res-meta">SKU: ${i.sku||'—'} · Арт: ${i.part_number||'—'} · Остаток: <strong>${i.quantity} ${i.unit||'шт'}</strong> · ${i.location?.code||'нет на складе'}</div></div>`).join('');
+    html+=`<div class="search-result-item manual" onmousedown="selectManual(${idx},'${escQ(val)}')">✏️ Ввести вручную: "${val}"</div>`;
+    res.innerHTML=html;res.classList.add('show');
+}
+function selectCatalogItem(idx,id,name,part,unit){document.getElementById(`iname-${idx}`).value=name;document.getElementById(`iitem_id-${idx}`).value=id;document.getElementById(`ipart-${idx}`).value=part;document.getElementById(`iunit-${idx}`).value=unit;document.getElementById(`iresults-${idx}`).classList.remove('show');}
+function selectManual(idx,name){document.getElementById(`iname-${idx}`).value=name;document.getElementById(`iitem_id-${idx}`).value='';document.getElementById(`iresults-${idx}`).classList.remove('show');}
+function hideResults(idx){setTimeout(()=>document.getElementById(`iresults-${idx}`)?.classList.remove('show'),200);}
+
+function previewItemPhoto(idx,input){
+    if(!input.files?.[0])return;
+    const r=new FileReader();
+    r.onload=e=>{const img=document.getElementById(`iphoto-preview-${idx}`);img.src=e.target.result;img.style.display='block';document.getElementById(`iphoto-area-${idx}`).querySelector('span').style.display='none';};
+    r.readAsDataURL(input.files[0]);
 }
 
-// Поиск по каталогу
-function searchCatalog(idx, val) {
-    const resultsEl = document.getElementById(`iresults-${idx}`);
-    document.getElementById(`iitem_id-${idx}`).value = '';
-
-    if (val.length < 2) { resultsEl.classList.remove('show'); return; }
-
-    const q = val.toLowerCase();
-    const matches = catalogItems.filter(i =>
-        i.name.toLowerCase().includes(q) ||
-        (i.sku && i.sku.toLowerCase().includes(q)) ||
-        (i.part_number && i.part_number.toLowerCase().includes(q))
-    ).slice(0, 6);
-
-    let html = matches.map(i => `
-        <div class="search-result-item" onmousedown="selectCatalogItem(${idx}, '${i.id}', '${escQ(i.name)}', '${escQ(i.part_number||'')}', '${i.unit||'шт'}')">
-            <div class="res-name">${i.name}</div>
-            <div class="res-meta">
-                SKU: ${i.sku || '—'} · Арт: ${i.part_number || '—'}
-                · Остаток: <strong>${i.quantity} ${i.unit || 'шт'}</strong>
-                · ${i.location?.code || 'нет на складе'}
-            </div>
-        </div>`).join('');
-
-    // Опция ручного ввода
-    html += `<div class="search-result-item manual"
-        onmousedown="selectManual(${idx}, '${escQ(val)}')">
-        ✏️ Ввести вручную: "${val}"
-    </div>`;
-
-    resultsEl.innerHTML = html;
-    resultsEl.classList.add('show');
-}
-
-function selectCatalogItem(idx, id, name, part, unit) {
-    document.getElementById(`iname-${idx}`).value  = name;
-    document.getElementById(`iitem_id-${idx}`).value = id;
-    document.getElementById(`ipart-${idx}`).value  = part;
-    document.getElementById(`iunit-${idx}`).value  = unit;
-    document.getElementById(`iresults-${idx}`).classList.remove('show');
-}
-
-function selectManual(idx, name) {
-    document.getElementById(`iname-${idx}`).value    = name;
-    document.getElementById(`iitem_id-${idx}`).value = '';
-    document.getElementById(`iresults-${idx}`).classList.remove('show');
-}
-
-function hideResults(idx) {
-    setTimeout(() => {
-        document.getElementById(`iresults-${idx}`)?.classList.remove('show');
-    }, 200);
-}
-
-function previewItemPhoto(idx, input) {
-    if (!input.files || !input.files[0]) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-        const img  = document.getElementById(`iphoto-preview-${idx}`);
-        const area = document.getElementById(`iphoto-area-${idx}`);
-        img.src = e.target.result;
-        img.style.display = 'block';
-        area.querySelector('span').style.display = 'none';
-    };
-    reader.readAsDataURL(input.files[0]);
-}
-
-// ══════════════════════════════════════════════════ SUBMIT ══
-async function submitOrder() {
-    const alertEl   = document.getElementById('createAlert');
-    const equipment = document.getElementById('woEquipment').value.trim();
-    const eqNum     = document.getElementById('woEquipmentNum').value.trim();
-    const workType  = document.getElementById('woWorkType').value;
-
-    if (!equipment || !eqNum || !workType) {
-        showAlert(alertEl, 'Заполните обязательные поля: техника, номер и тип работы', 'error');
-        alertEl.scrollIntoView({ behavior: 'smooth' });
-        return;
+async function submitOrder(){
+    const a=document.getElementById('createAlert');
+    const eqId=document.getElementById('woEquipmentId').value;
+    const eqName=document.getElementById('woEquipment').value;
+    const eqNum=document.getElementById('woEquipmentNum').value;
+    const wt=document.getElementById('woWorkType').value;
+    if(!eqId){showAlert(a,'Выберите технику из списка','error');a.scrollIntoView({behavior:'smooth'});return;}
+    if(!eqNum){showAlert(a,'Выберите гос. номер','error');return;}
+    if(!wt){showAlert(a,'Выберите тип работы','error');return;}
+    const items=[];
+    for(let i=1;i<=itemRowCount;i++){
+        const row=document.getElementById(`item-row-${i}`);if(!row)continue;
+        const name=document.getElementById(`iname-${i}`)?.value.trim();if(!name)continue;
+        items.push({item_id:document.getElementById(`iitem_id-${i}`)?.value||'',name,part_number:document.getElementById(`ipart-${i}`)?.value||'',unit:document.getElementById(`iunit-${i}`)?.value||'шт',quantity:parseInt(document.getElementById(`iqty-${i}`)?.value)||1,justification:document.getElementById(`ijust-${i}`)?.value||''});
     }
-
-    // Собираем позиции
-    const items = [];
-    for (let i = 1; i <= itemRowCount; i++) {
-        const row = document.getElementById(`item-row-${i}`);
-        if (!row) continue;
-        const name = document.getElementById(`iname-${i}`)?.value.trim();
-        const qty  = parseInt(document.getElementById(`iqty-${i}`)?.value) || 0;
-        if (!name) continue;
-        items.push({
-            item_id:       document.getElementById(`iitem_id-${i}`)?.value || '',
-            name,
-            part_number:   document.getElementById(`ipart-${i}`)?.value || '',
-            unit:          document.getElementById(`iunit-${i}`)?.value || 'шт',
-            quantity:      qty,
-            justification: document.getElementById(`ijust-${i}`)?.value || '',
-        });
-    }
-
-    if (!items.length) {
-        showAlert(alertEl, 'Добавьте хотя бы одну деталь', 'error');
-        return;
-    }
-
-    const payload = {
-        equipment,
-        equipment_number: eqNum,
-        work_type:        workType,
-        priority:         urgency,
-        description:      document.getElementById('woDescription').value,
-        mechanic_id:      currentUserId,
-        items
-    };
-
-    try {
-        const res  = await fetch(`${API}/mechanic/order`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': token
-            },
-            body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-
-        if (data.success) {
-            showAlert(alertEl, `✅ Заявка ${data.order_id} успешно отправлена!`, 'success');
-            resetCreateForm();
-            setTimeout(() => showPage('orders'), 1500);
-        } else {
-            showAlert(alertEl, data.error || 'Ошибка создания заявки', 'error');
-        }
-    } catch(e) {
-        // API ещё не реализован — показываем успех локально для демо
-        showAlert(alertEl,
-            '✅ Заявка сформирована (API /mechanic/order ещё не реализован на бэкенде)',
-            'success');
-    }
+    if(!items.length){showAlert(a,'Добавьте хотя бы одну деталь','error');return;}
+    const payload={equipment:eqName,equipment_number:eqNum,equipment_id:eqId,work_type:wt,priority:urgency,description:document.getElementById('woDescription').value,mechanic_id:currentUserId,items};
+    try{
+        const res=await fetch(`${API}/mechanic/order`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':token},body:JSON.stringify(payload)});
+        const d=await res.json();
+        if(d.success){showAlert(a,`✅ Заявка ${d.order_id} успешно отправлена!`,'success');resetCreateForm();setTimeout(()=>showPage('orders'),1500);}
+        else{showAlert(a,d.error||'Ошибка создания заявки','error');}
+    }catch(e){showAlert(a,'✅ Заявка сформирована (API ещё не реализован на бэкенде)','success');}
 }
 
-function resetCreateForm() {
-    document.getElementById('woEquipment').value    = '';
-    document.getElementById('woEquipmentNum').value = '';
-    document.getElementById('woWorkType').value     = '';
-    document.getElementById('woDescription').value  = '';
+function resetCreateForm(){
+    clearEquipment();
+    document.getElementById('woWorkType').value='';
+    document.getElementById('woDescription').value='';
     setUrgency('normal');
-    document.getElementById('woItemsList').innerHTML = '';
-    itemRowCount = 0;
-    addItemRow();
+    document.getElementById('woItemsList').innerHTML='';
+    itemRowCount=0;addItemRow();
     hideAlert(document.getElementById('createAlert'));
 }
 
-// ══════════════════════════════════════════════════ UTILS ══
-function showAlert(el, msg, type) {
-    el.textContent = msg;
-    el.className = `alert alert-${type} show`;
-}
-function hideAlert(el) {
-    if (!el) return;
-    el.className = 'alert';
-    el.textContent = '';
-}
-function formatDate(str) {
-    if (!str) return '—';
-    return new Date(str).toLocaleString('ru-RU', {
-        day:'2-digit', month:'2-digit', year:'numeric',
-        hour:'2-digit', minute:'2-digit'
-    });
-}
-function escQ(s) {
-    return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-}
+function showAlert(el,msg,type){el.textContent=msg;el.className=`alert alert-${type} show`;}
+function hideAlert(el){if(el){el.className='alert';el.textContent='';}}
+function formatDate(s){if(!s)return '—';return new Date(s).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+function formatDateShort(s){if(!s)return '';return new Date(s).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'});}
+function escQ(s){return(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');}
 
-// Enter на логине
-document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && document.getElementById('authOverlay').style.display !== 'none') {
-        doLogin();
-    }
-});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('authOverlay').style.display!=='none')doLogin();});
 </script>
 </body>
 </html>

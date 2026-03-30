@@ -47,6 +47,7 @@ func InitDB() error {
 		&models.Item{},
 		&models.User{},
 		&models.ItemMovement{},
+		&models.Equipment{},
 		&models.WorkOrder{},
 		&models.WorkOrderItem{},
 		&models.SupplyRequest{},

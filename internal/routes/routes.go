@@ -36,6 +36,11 @@ func SetupRoutes(router *gin.Engine) {
 		admin.POST("/location", handlers.AdminCreateLocation)
 		admin.GET("/location/:id/qr", handlers.AdminGetLocationQR)
 		admin.GET("/categories", handlers.AdminGetCategories)
+		admin.GET("/equipment", handlers.AdminGetEquipment)
+		admin.POST("/equipment", handlers.AdminCreateEquipment)
+		admin.PUT("/equipment/:id", handlers.AdminUpdateEquipment)
+		admin.DELETE("/equipment/:id", handlers.AdminDeleteEquipment)
+		admin.GET("/equipment/types", handlers.AdminGetEquipmentTypes)
 	}
 
 	// Механик
