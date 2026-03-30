@@ -70,3 +70,32 @@ type ItemMovement struct {
 func (ItemMovement) TableName() string {
 	return "item_movements"
 }
+
+type SupplyRequest struct {
+	ID          string    `json:"id" gorm:"primaryKey"`
+	ItemID      string    `json:"item_id"`
+	ItemName    string    `json:"item_name"` // Добавь это поле
+	RequestedBy string    `json:"requested_by"`
+	Quantity    int       `json:"quantity"`
+	Reason      string    `json:"reason"`
+	Status      string    `json:"status"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+type Supplier struct {
+	ID          string    `json:"id" gorm:"primaryKey"`
+	Name        string    `json:"name"`
+	ContactInfo string    `json:"contact_info"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+type ProcurementTask struct {
+	ID         string    `json:"id" gorm:"primaryKey"`
+	RequestID  string    `json:"request_id" gorm:"type:text"`
+	SupplierID string    `json:"supplier_id" gorm:"type:text"`
+	AssignedTo string    `json:"assigned_to"`
+	Price      float64   `json:"price"`
+	Status     string    `json:"status"`
+	CreatedAt  time.Time `json:"created_at"`
+}

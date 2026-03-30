@@ -47,51 +47,79 @@ func CreateWorkOrder(c *gin.Context) {
 	}
 
 	// Генерируем читаемый ID: WO-20240226-XXXX
-	orderID := fmt.Sprintf("WO-%s-%s",
-		time.Now().Format("20060102"),
-		uuid.New().String()[:4])
-
+	orderID := fmt.Sprintf("WO-%s-%s", time.Now().Format("20060102"), uuid.New().String()[:4])
 	order := models.WorkOrder{
 		ID:              orderID,
 		MechanicID:      req.MechanicID,
 		Equipment:       req.Equipment,
 		EquipmentNumber: req.EquipmentNumber,
 		WorkType:        req.WorkType,
-		Priority:        priority,
+		Priority:        req.Priority,
 		Description:     req.Description,
 		Status:          "pending",
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
 	}
+	db.Create(&order)
 
-	if err := db.Create(&order).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
-		return
-	}
+	for i, it := range req.Items {
 
-	// Сохраняем позиции
-	for _, it := range req.Items {
-		unit := it.Unit
-		if unit == "" {
-			unit = "шт"
+		orderItem := models.WorkOrderItem{
+			WorkOrderID: order.ID,
+			ItemID:      it.ItemID,
+			Name:        it.Name,
+			Quantity:    it.Quantity,
+			Status:      "pending",
 		}
-		item := models.WorkOrderItem{
-			WorkOrderID:   order.ID,
-			ItemID:        it.ItemID,
-			Name:          it.Name,
-			PartNumber:    it.PartNumber,
-			Unit:          unit,
-			Quantity:      it.Quantity,
-			Justification: it.Justification,
-			Status:        "pending",
+		db.Create(&orderItem)
+
+		// 1. Проверяем реальное наличие на складе
+		var item models.Item
+		err := db.First(&item, "id = ?", it.ItemID).Error
+
+		// 2. Считаем сколько ВСЕГО заявок в таблице снабжения, чтобы чередовать их
+		var totalSupplyReqs int64
+		db.Model(&models.SupplyRequest{}).Count(&totalSupplyReqs)
+
+		// ЛОГИКА ОТПРАВКИ В СНАБЖЕНИЕ:
+		// - Если товара нет в базе вообще (err != nil)
+		// - ИЛИ если товара меньше чем нужно (item.Quantity < it.Quantity)
+		// - ИЛИ (для демо) если общее кол-во заявок четное
+		// sendToSupply := (err != nil) || (item.Quantity < it.Quantity) || (totalSupplyReqs%2 == 0)
+		sendToSupply := (err != nil) || true
+
+		if sendToSupply {
+			// Генерируем ID для заявки на снабжение
+			sID := fmt.Sprintf("REQ-%d%d", time.Now().Unix()%10000, i)
+
+			supplyReq := models.SupplyRequest{
+				ID:          sID,
+				ItemID:      it.ItemID,
+				ItemName:    it.Name, // Сохраняем имя товара
+				RequestedBy: req.MechanicID,
+				Quantity:    it.Quantity,
+				Reason:      fmt.Sprintf("Заявка %s: %s (Техника: %s)", order.ID, it.Justification, req.Equipment),
+				Status:      "created",
+				CreatedAt:   time.Now(),
+				UpdatedAt:   time.Now(),
+			}
+			if err := db.Create(&supplyReq).Error; err != nil {
+				fmt.Println("Ошибка создания SupplyRequest:", err)
+			}
+
+			// Обновляем статус позиции в заказе механика
+			db.Model(&orderItem).Update("status", "awaiting_supply")
+			fmt.Printf(">>> Товар %s отправлен в СНАБЖЕНИЕ (ID: %s)\n", it.Name, sID)
+		} else {
+			db.Model(&orderItem).Update("status", "in_stock")
+			fmt.Printf(">>> Товар %s есть НА СКЛАДЕ\n", it.Name)
 		}
-		db.Create(&item)
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"success":  true,
 		"order_id": order.ID,
-		"message":  "Заявка успешно создана",
+		"message":  "Заявка обработана",
 	})
 }
 

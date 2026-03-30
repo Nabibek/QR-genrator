@@ -49,10 +49,24 @@ func SetupRoutes(router *gin.Engine) {
 		mechanic.POST("/order/:id/issue", handlers.IssueOrder)
 	}
 
+	supply := router.Group("/api/supply")
+	{
+		supply.POST("/request", handlers.CreateSupplyRequest)
+		supply.POST("/:id/approve-engineer", handlers.ApproveByEngineer)
+		supply.POST("/:id/approve-manager", handlers.ApproveByManager)
+		supply.POST("/:id/assign", handlers.AssignProcurement)
+		supply.POST("/:id/select-supplier", handlers.SelectSupplier)
+		supply.POST("/:id/approve-commercial", handlers.ApproveByCommercial)
+		supply.POST("/:id/receive", handlers.ReceiveSupply)
+		supply.POST("/:id/reject-commercial", handlers.RejectByCommercial)
+		supply.GET("/requests", handlers.GetSupplyRequests)
+	}
+
 	// Статика
 	router.StaticFile("/", "./static/index.html")
 	router.StaticFile("/admin", "./static/admin.html")
 	router.StaticFile("/mechanic", "./static/mechanic.html")
+	router.StaticFile("/supply", "./static/supply.html")
 	router.Static("/css", "./static/css")
 	router.Static("/js", "./static/js")
 	router.Static("/qrcodes", "./qrcodes")

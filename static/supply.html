@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Supply Chain CRM</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/supply.css"> <!-- Добавь стили из предыдущего ответа -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+<div class="container-wide">
+    <div class="header">
+        <h1>📦 Снабжение предприятия</h1>
+        <div class="subtitle" id="userDisplay">Панель управления закупками</div>
+    </div>
+
+    <div class="role-badge-panel">
+        <label>Доступ (Демо-роль):</label>
+        <select id="currentRole" class="form-control" onchange="loadRequests()" style="width:200px">
+            <option value="engineer">Инженер (Проверка)</option>
+            <option value="manager">Руководитель (ОК)</option>
+            <option value="supply_head">Нач. Снабжения</option>
+            <option value="buyer">Снабженец (Поиск)</option>
+            <option value="commercial">Коммерческий дир.</option>
+            <option value="warehouse">Кладовщик (Приемка)</option>
+        </select>
+    </div>
+
+    <div class="supply-table-container">
+        <table class="supply-table">
+            <thead>
+                <tr>
+                    <th>ID / Дата</th>
+                    <th>Товар</th>
+                    <th>Кол-во</th>
+                    <th>Пайплайн</th>
+                    <th>Действие</th>
+                </tr>
+            </thead>
+            <tbody id="supplyBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- МОДАЛКА ПРОСМОТРА -->
+<div id="viewModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>Детали заявки</h3>
+        <div id="modalData" class="scanned-data"></div>
+        <div class="button-group" style="margin-top:20px">
+            <button class="btn btn-small" onclick="closeModals()">Закрыть</button>
+        </div>
+    </div>
+</div>
+
+<!-- МОДАЛКА СНАБЖЕНЦА -->
+<div id="buyerModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>Данные по поставщику</h3>
+        <div class="form-group">
+            <input type="text" id="sup_name" class="form-control" placeholder="Название поставщика">
+        </div>
+        <div class="form-group">
+            <input type="number" id="sup_price" class="form-control" placeholder="Цена за ед.">
+        </div>
+        <div class="form-group">
+            <button class="btn btn-mode" onclick="alert('Файл прикреплен (симуляция)')">
+                <i class="fas fa-paperclip"></i> Прикрепить счет
+            </button>
+        </div>
+        <button class="btn btn-primary" onclick="submitSupplierData()">Отправить коммерческому</button>
+    </div>
+</div>
+
+<!-- МОДАЛКА ОТКАЗА -->
+<div id="rejectModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 style="color:var(--danger)">Причина возврата</h3>
+        <textarea id="rejectComment" class="form-control" placeholder="Опишите что не так с ценой..."></textarea>
+        <button class="btn btn-stop" style="margin-top:10px" onclick="submitReject()">Вернуть инженеру</button>
+    </div>
+</div>
+
+<script>
+let allRequests = [];
+let activeId = null;
+
+// ФУНКЦИЯ ЗАГРУЗКИ ИЗ БАЗЫ
+async function loadRequests() {
+    try {
+        const res = await fetch('/api/supply/requests'); 
+        const json = await res.json();
+        if (json.success) {
+            allRequests = json.data || [];
+            renderTable();
+        }
+    } catch (e) {
+        console.error("Ошибка загрузки:", e);
+    }
+}
+
+function renderTable() {
+    const role = document.getElementById('currentRole').value;
+    const body = document.getElementById('supplyBody');
+    body.innerHTML = '';
+
+    if (!allRequests || allRequests.length === 0) {
+        body.innerHTML = '<tr><td colspan="5" style="text-align:center">Заявок пока нет</td></tr>';
+        return;
+    }
+
+    allRequests.forEach(req => {
+        const row = document.createElement('tr');
+        const itemName = req.item_name || req.item_id || "Без названия";
+        
+        row.innerHTML = `
+            <td>
+                <div class="item-info-mini">
+                    <strong>${req.id}</strong>
+                    <span>${new Date(req.created_at).toLocaleString()}</span>
+                    <button class="btn-small" onclick="viewRequest('${req.id}')" style="border:none; background:none; color:blue; cursor:pointer; padding:0; text-decoration:underline">Просмотреть</button>
+                </div>
+            </td>
+            <td>${itemName}</td>
+            <td><strong>${req.quantity}</strong></td>
+            <td>${getPipelineUI(req.status)}</td>
+            <td>${getActionBtn(req, role)}</td>
+        `;
+        body.appendChild(row);
+    });
+}
+
+function getPipelineUI(status) {
+    const steps = ['created', 'approved_by_engineer', 'approved_by_manager', 'assigned_to_procurement', 'supplier_selected', 'approved_by_commercial', 'received'];
+    const labels = ['Инж', 'Рук', 'Нач', 'Снаб', 'Цена', 'Ком', 'Вход'];
+    let html = '<div class="pipeline-track">';
+    let reached = true;
+    steps.forEach((s, i) => {
+        let cls = reached ? 'done' : '';
+        if (s === status) { cls = 'active'; reached = false; }
+        html += `<div class="pipeline-step ${cls}" data-label="${labels[i]}"></div>`;
+    });
+    return html + '</div>';
+}
+
+function getActionBtn(req, role) {
+    const btn = (title, action, endpoint) => `<button class="btn-action" onclick="${action}('${req.id}', '${endpoint}')">${title}</button>`;
+    
+    // Важно: endpoint должен совпадать с тем, что в routes.go
+    if (role === 'engineer' && req.status === 'created') return btn('Проверить', 'callApi', 'approve-engineer');
+    if (role === 'manager' && req.status === 'approved_by_engineer') return btn('Одобрить', 'callApi', 'approve-manager');
+    if (role === 'supply_head' && req.status === 'approved_by_manager') return btn('Назначить', 'callApi', 'assign');
+    if (role === 'buyer' && req.status === 'assigned_to_procurement') return `<button class="btn-action" onclick="openBuyerModal('${req.id}')">Ввести данные</button>`;
+    if (role === 'commercial' && req.status === 'supplier_selected') {
+        return btn('ОК', 'callApi', 'approve-commercial') + ' ' + `<button class="btn-action" style="background:red" onclick="openRejectModal('${req.id}')">❌</button>`;
+    }
+    if (role === 'warehouse' && req.status === 'approved_by_commercial') return btn('Принять', 'callApi', 'receive');
+    
+    return '<span style="color:#ccc">Ожидание...</span>';
+}
+
+// УНИВЕРСАЛЬНЫЙ ВЫЗОВ API
+async function callApi(id, endpoint) {
+    try {
+        const res = await fetch(`/api/supply/${id}/${endpoint}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            loadRequests(); // Перезагружаем таблицу
+        } else {
+            alert("Ошибка: " + data.error);
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+// МОДАЛЬНЫЕ ОКНА
+function viewRequest(id) {
+    const req = allRequests.find(r => r.id === id);
+    if (!req) return;
+    activeId = id;
+    document.getElementById('modalData').innerHTML = `
+        <div class="data-item"><label>Причина:</label> <div class="data-value">${req.reason || 'Не указана'}</div></div>
+        <div class="data-item"><label>Статус:</label> <div class="data-value">${req.status}</div></div>
+        <div class="data-item"><label>Кол-во:</label> <div class="data-value">${req.quantity}</div></div>
+    `;
+    document.getElementById('viewModal').style.display = 'flex';
+}
+
+function openBuyerModal(id) { 
+    activeId = id; 
+    document.getElementById('buyerModal').style.display = 'flex'; 
+}
+
+function openRejectModal(id) { 
+    activeId = id; 
+    document.getElementById('rejectModal').style.display = 'flex'; 
+}
+
+function closeModals() { 
+    document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); 
+}
+
+async function submitSupplierData() {
+    const data = {
+        supplier_id: document.getElementById('sup_name').value,
+        price: parseFloat(document.getElementById('sup_price').value)
+    };
+    const res = await fetch(`/api/supply/${activeId}/select-supplier`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    });
+    if (res.ok) {
+        closeModals();
+        loadRequests();
+    }
+}
+
+async function submitReject() {
+    const comm = document.getElementById('rejectComment').value;
+    await fetch(`/api/supply/${activeId}/reject-commercial`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({comment: comm})
+    });
+    closeModals();
+    loadRequests();
+}
+
+// Закрытие модалок по клику вне контента
+window.onclick = function(event) {
+    if (event.target.className === 'modal-overlay') closeModals();
+}
+
+loadRequests();
+setInterval(loadRequests, 5000); 
+</script>
+</body>
+</html>

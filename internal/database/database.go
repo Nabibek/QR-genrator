@@ -49,6 +49,9 @@ func InitDB() error {
 		&models.ItemMovement{},
 		&models.WorkOrder{},
 		&models.WorkOrderItem{},
+		&models.SupplyRequest{},
+		&models.Supplier{},
+		&models.ProcurementTask{},
 	)
 
 	if err != nil {
